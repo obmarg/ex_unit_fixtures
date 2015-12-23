@@ -1,0 +1,3 @@
+defmodule ExunitFixtures do
+
+end
