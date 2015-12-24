@@ -70,5 +70,5 @@ If you need to do some teardown work for a fixture you can use the ExUnit
   1. Add exunit_fixtures to your list of dependencies in `mix.exs`:
 
         def deps do
-          [{:exunit_fixtures, github: "obmarg/exunit_fixtures", only: [:test]}]
+          [{:ex_unit_fixtures, github: "obmarg/ex_unit_fixtures", only: [:test]}]
         end

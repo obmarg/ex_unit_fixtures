@@ -114,6 +114,8 @@ defmodule ExUnitFixtures do
 
   @spec create_fixture(:atom, %{}) :: term
   defp create_fixture(fixture_info, created_fixtures) do
+    # Creates a fixture from it's fixture_info & deps, then inserts it into the
+    # created_fixtures map.
     args = for dep_name <- fixture_info.dep_names do
       created_fixtures[dep_name]
     end
@@ -126,6 +128,7 @@ defmodule ExUnitFixtures do
 
   @spec topsort_fixtures([FixtureInfo.t]) :: [FixtureInfo.t]
   defp topsort_fixtures(fixtures) do
+    # Sorts a list of fixtures by their dependencies.
     graph = :digraph.new([:acyclic])
     try do
       fixtures_to_graph(fixtures, graph)
