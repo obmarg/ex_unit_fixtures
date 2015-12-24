@@ -12,6 +12,10 @@ defmodule ExunitFixturesTest do
     {:not_so_simple, simple}
   end
 
+  deffixture fixture_with_context(context) do
+    context.fun_things
+  end
+
   setup do
     {:ok, %{setup_ran: true}}
   end
@@ -66,4 +70,11 @@ defmodule ExunitFixturesTest do
                                           %{test: :test, other: :other})
     end
   end
+
+  @tag fixtures: [:fixture_with_context]
+  @tag fun_things: "Clowns"
+  test "fixtures can access the test context", context do
+    assert context.fixture_with_context == "Clowns"
+  end
+
 end

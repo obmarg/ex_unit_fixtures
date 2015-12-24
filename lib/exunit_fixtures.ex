@@ -21,6 +21,13 @@ defmodule ExUnitFixtures do
   Defines a fixture.
   """
   defmacro deffixture({name, info, params}, body) do
+    if name == :context do
+      raise """
+      The name context is reserved for the ExUnit context.
+      It may not be used for fixtures.
+      """
+    end
+
     create_name = :"fixture_create_#{name}"
     dep_names = for {dep_name, _, _} <- params || [] do
       dep_name
@@ -63,16 +70,13 @@ defmodule ExUnitFixtures do
   Creates the required fixtures for a given test context.
   """
   @spec fixtures_for_context(%{}, %{}) :: %{}
-  def fixtures_for_context(context, fixtures) do
+  def fixtures_for_context(context, all_fixtures) do
     if context[:fixtures] do
       fixtures =
         context.fixtures
-          |> Enum.flat_map(&(get_all_fixtures &1, fixtures))
+          |> Enum.flat_map(&(get_all_fixtures &1, all_fixtures))
           |> topsort_fixtures
-          |> Enum.reduce(%{}, fn (fixture_info, created_fixtures) ->
-            Map.put(created_fixtures, fixture_info.name,
-                    create_fixture(fixture_info, created_fixtures))
-          end)
+          |> Enum.reduce(%{context: context}, &create_fixture/2)
           |> Map.take(context.fixtures)
 
       Map.merge(context, fixtures)
@@ -81,6 +85,7 @@ defmodule ExUnitFixtures do
     end
   end
 
+  defp get_all_fixtures(:context, _), do: []
   defp get_all_fixtures(fixture_name, all_fixtures) do
     # Gets a fixture & it's dependencies from all the potential fixtures.
     fixture_info = all_fixtures[fixture_name]
@@ -112,7 +117,9 @@ defmodule ExUnitFixtures do
     end
 
     {mod, func} = fixture_info.func
-    :erlang.apply(mod, func, args)
+    new_fixture = :erlang.apply(mod, func, args)
+
+    Map.put(created_fixtures, fixture_info.name, new_fixture)
   end
 
   @spec topsort_fixtures([FixtureInfo.t]) :: [FixtureInfo.t]
@@ -136,8 +143,10 @@ defmodule ExUnitFixtures do
       ^name = :digraph.add_vertex(graph, name, fixture)
     end
 
-    for fixture <- fixtures, dependency <- fixture.dep_names do
-      [:"$e" | _] = :digraph.add_edge(graph, dependency, fixture.name)
+    for fixture <- fixtures,
+        dep_name <- fixture.dep_names,
+        dep_name != :context do
+          [:"$e" | _] = :digraph.add_edge(graph, dep_name, fixture.name)
     end
   end
 end
