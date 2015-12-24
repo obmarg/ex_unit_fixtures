@@ -27,6 +27,7 @@ defmodule ExunitFixtures.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    []
+    [{:dogma, "~> 0.0.11"},
+     {:credo, "~> 0.2.4"}]
   end
 end
