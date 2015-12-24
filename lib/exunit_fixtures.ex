@@ -83,7 +83,19 @@ defmodule ExUnitFixtures do
     # Gets a fixture & it's dependencies from all the potential fixtures.
     fixture_info = all_fixtures[fixture_name]
     unless fixture_info do
-      raise "Could not find a fixture named #{fixture_name}"
+      fixture_name = String.Chars.to_string(fixture_name)
+      suggestion =
+        all_fixtures
+        |> Map.keys
+        |> Enum.map(&String.Chars.to_string/1)
+        |> Enum.sort_by(&(String.jaro_distance &1, fixture_name), &>=/2)
+        |> List.first
+
+      err = "Could not find a fixture named #{fixture_name}."
+      if suggestion do
+        err = err <> " Did you mean #{suggestion}?"
+      end
+      raise err
     end
 
     deps = Enum.flat_map(fixture_info.dep_names,
