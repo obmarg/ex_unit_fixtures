@@ -42,6 +42,8 @@ defmodule ExUnitFixtures do
       end
       Module.register_attribute __MODULE__, :fixtures, accumulate: true
       @before_compile ExUnitFixtures
+
+      import ExUnitFixtures, only: [deffixture: 2]
     end
   end
 

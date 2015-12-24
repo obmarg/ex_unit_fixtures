@@ -4,11 +4,11 @@ defmodule ExunitFixturesTest do
   use ExUnit.Case
   doctest ExUnitFixtures
 
-  ExUnitFixtures.deffixture simple do
+  deffixture simple do
     "simple"
   end
 
-  ExUnitFixtures.deffixture not_so_simple(simple) do
+  deffixture not_so_simple(simple) do
     {:not_so_simple, simple}
   end
 
