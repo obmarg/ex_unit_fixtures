@@ -94,5 +94,4 @@ defmodule ExunitFixturesTest do
   test "fixtures can access the test context", context do
     assert context.fixture_with_context == "Clowns"
   end
-
 end
