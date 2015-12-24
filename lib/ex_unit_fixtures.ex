@@ -45,7 +45,7 @@ defmodule ExUnitFixtures do
   defmacro __using__(_opts) do
     quote do
       if is_list(Module.get_attribute(__MODULE__, :ex_unit_tests)) do
-        raise "must be `use ExUnitFixtures` must come before `use ExUnit.Case`"
+        raise "`use ExUnitFixtures` must come before `use ExUnit.Case`"
       end
       Module.register_attribute __MODULE__, :fixtures, accumulate: true
       @before_compile ExUnitFixtures
