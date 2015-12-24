@@ -50,7 +50,20 @@ Fixtures can depend on other fixtures, by naming a parameter after that fixture:
       # Test
     end
 
-In the sample above, we have 2 fixtures: one which creates the database and another which inserts a model into that database.  The test function depends on `my_model` which depends on the database.  ExUnitFixtures knows this, and takes care of setting up the database and passing it in to `my_model`.
+In the sample above, we have 2 fixtures: one which creates the database and
+another which inserts a model into that database. The test function depends on
+`my_model` which depends on the database. ExUnitFixtures knows this, and takes
+care of setting up the database and passing it in to `my_model`.
+
+If you need to do some teardown work for a fixture you can use the ExUnit
+`on_exit` function:
+
+    deffixture database do
+      # Setup the database
+      on_exit fn ->
+        # Tear down the database
+      end
+    end
 
 ## Installation
 
