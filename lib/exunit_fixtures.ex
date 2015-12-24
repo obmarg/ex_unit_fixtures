@@ -74,7 +74,8 @@ defmodule ExUnitFixtures do
     if context[:fixtures] do
       fixtures =
         context.fixtures
-          |> Enum.flat_map(&(get_all_fixtures &1, all_fixtures))
+          |> Enum.flat_map(&(fixture_and_deps &1, all_fixtures))
+          |> Enum.uniq
           |> topsort_fixtures
           |> Enum.reduce(%{context: context}, &create_fixture/2)
           |> Map.take(context.fixtures)
@@ -85,8 +86,9 @@ defmodule ExUnitFixtures do
     end
   end
 
-  defp get_all_fixtures(:context, _), do: []
-  defp get_all_fixtures(fixture_name, all_fixtures) do
+  @spec fixture_and_deps(:atom, %{atom: FixtureInfo.t}) :: [FixtureInfo.t]
+  defp fixture_and_deps(:context, _), do: []
+  defp fixture_and_deps(fixture_name, all_fixtures) do
     # Gets a fixture & it's dependencies from all the potential fixtures.
     fixture_info = all_fixtures[fixture_name]
     unless fixture_info do
@@ -106,7 +108,7 @@ defmodule ExUnitFixtures do
     end
 
     deps = Enum.flat_map(fixture_info.dep_names,
-                         &(get_all_fixtures &1, all_fixtures))
+                         &(fixture_and_deps &1, all_fixtures))
     deps ++ [fixture_info]
   end
 

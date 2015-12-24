@@ -16,6 +16,18 @@ defmodule ExunitFixturesTest do
     context.fun_things
   end
 
+  deffixture ref do
+    make_ref
+  end
+
+  deffixture ref_child1(ref) do
+    ref
+  end
+
+  deffixture ref_child2(ref) do
+    ref
+  end
+
   setup do
     {:ok, %{setup_ran: true}}
   end
@@ -51,6 +63,12 @@ defmodule ExunitFixturesTest do
   test "deffixture with dependencies & parent dependencies", context do
     assert context.not_so_simple == {:not_so_simple, "simple"}
     assert context.simple == "simple"
+  end
+
+  @tag fixtures: [:ref_child1, :ref_child2, :ref]
+  test "fixture dependencies only created once", context do
+    assert context.ref_child1 == context.ref
+    assert context.ref_child2 == context.ref
   end
 
   @tag fixtures: [:simple]
