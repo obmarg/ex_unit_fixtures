@@ -54,16 +54,8 @@ In the sample above, we have 2 fixtures: one which creates the database and anot
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed as:
-
   1. Add exunit_fixtures to your list of dependencies in `mix.exs`:
 
         def deps do
-          [{:exunit_fixtures, "~> 0.0.1"}]
-        end
-
-  2. Ensure exunit_fixtures is started before your application:
-
-        def application do
-          [applications: [:exunit_fixtures]]
+          [{:exunit_fixtures, github: "obmarg/exunit_fixtures", only: [:test]}]
         end
