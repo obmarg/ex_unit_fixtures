@@ -8,16 +8,23 @@ defmodule ExunitFixturesTest do
     "simple"
   end
 
+  ExUnitFixtures.deffixture not_so_simple(simple) do
+    {:not_so_simple, simple}
+  end
+
+  setup do
+    {:ok, %{setup_ran: true}}
+  end
+
   test "deffixture generates a function that can create a fixture" do
     assert fixture_create_simple == "simple"
   end
 
   test "deffixture adds the fixture to @fixtures" do
-    assert @fixtures == [
-      %ExUnitFixtures.FixtureInfo{name: :simple,
-                                  func: {ExunitFixturesTest,
-                                         :fixture_create_simple}}
-    ]
+    expected = %ExUnitFixtures.FixtureInfo{name: :simple,
+                                           func: {ExunitFixturesTest,
+                                                  :fixture_create_simple}}
+    assert expected in @fixtures
   end
 
   @tag fixtures: [:simple]
@@ -27,5 +34,23 @@ defmodule ExunitFixturesTest do
 
   test "not tagging with fixtures loads in nothing", context do
     refute Map.has_key?(context, :simple)
+    refute Map.has_key?(context, :complex)
+  end
+
+  @tag fixtures: [:not_so_simple]
+  test "deffixture with dependencies", context do
+    assert context.not_so_simple == {:not_so_simple, "simple"}
+    refute Map.has_key?(context, :simple)
+  end
+
+  @tag fixtures: [:not_so_simple, :simple]
+  test "deffixture with dependencies & parent dependencies", context do
+    assert context.not_so_simple == {:not_so_simple, "simple"}
+    assert context.simple == "simple"
+  end
+
+  @tag fixtures: [:simple]
+  test "other setup functions still run", context do
+    assert context.setup_ran
   end
 end
