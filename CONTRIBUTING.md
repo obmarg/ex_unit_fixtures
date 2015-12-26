@@ -1,4 +1,4 @@
-# Contributing to ex_unit_fixtures
+# Contributing
 
 Contributions of any form to `ex_unit_fixtures` are welcome - thanks in advance
 for any.

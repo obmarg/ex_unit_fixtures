@@ -7,7 +7,15 @@ defmodule ExUnitFixtures.Mixfile do
      elixir: "~> 1.1",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
-     deps: deps]
+     deps: deps,
+
+     name: "ExUnitFixtures",
+     source_url: "https://github.com/obmarg/ex_unit_fixtures",
+     homepage_url: "https://github.com/obmarg/ex_unit_fixtures",
+     docs: [main: "README",
+            extras: [{"README.md", [path: "README",
+                                    title: "Read Me"]},
+                     "CONTRIBUTING.md"]]]
   end
 
   # Configuration for the OTP application
@@ -28,6 +36,11 @@ defmodule ExUnitFixtures.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [{:dogma, "~> 0.0.11"},
-     {:credo, "~> 0.2.0"}]
+     {:credo, "~> 0.2.0"},
+
+     # For generating documentation.
+     {:earmark, "~> 0.1", only: :dev},
+     {:ex_doc, "~> 0.11", only: :dev}
+    ]
   end
 end
