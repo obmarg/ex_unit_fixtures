@@ -76,19 +76,6 @@ defmodule ExunitFixturesTest do
     assert context.setup_ran
   end
 
-  test "fixtures_for_context fails when given a missing fixture" do
-    assert_raise RuntimeError, ~r/Could not find a fixture named test/, fn ->
-      ExUnitFixtures.fixtures_for_context(%{fixtures: [:test]}, %{})
-    end
-  end
-
-  test "fixtures_for_context suggests other fixtures when missing" do
-    assert_raise RuntimeError, ~r/Did you mean test\?$/, fn ->
-      ExUnitFixtures.fixtures_for_context(%{fixtures: [:tets]},
-                                          %{test: :test, other: :other})
-    end
-  end
-
   @tag fixtures: [:fixture_with_context]
   @tag fun_things: "Clowns"
   test "fixtures can access the test context", context do

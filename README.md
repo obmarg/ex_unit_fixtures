@@ -34,7 +34,7 @@ For example, lets say some of your tests required a model named `my_model`, you
 need to define the fixture using `deffixture` and then tag your test to say it
 requires this fixture:
 
-    defmodule MyTests
+    defmodule MyTests do
       use ExUnitFixtures
       use ExUnit.Case
 
@@ -78,9 +78,15 @@ care of setting up the database and passing it in to `my_model`.
 If you need to do some teardown work for a fixture you can use the ExUnit
 `on_exit` function:
 
-    deffixture database do
-      # Setup the database
-      on_exit fn ->
-        # Tear down the database
+    defmodule TestWithTearDowns do
+      use ExUnitFixtures
+      use ExUnit.Case
+
+      deffixture database do
+        # Setup the database
+        on_exit fn ->
+          # Tear down the database
+          nil
+        end
       end
     end

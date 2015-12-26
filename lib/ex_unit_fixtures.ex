@@ -1,24 +1,106 @@
 defmodule ExUnitFixtures do
   @moduledoc """
-  A library for declaring & using fixtures in ExUnit.
+  A library for declaring & using test fixtures in ExUnit.
+
+  To use ExUnitFixtures, you should `use ExUnitFixtures` in your test case
+  (before `use ExUnit.Case`), and then define your fixtures using
+  `deffixture/2`. These fixtures can then be used by tagging your tests with the
+  `fixtures` tag. For example:
+
+      iex(2)> defmodule MyTests do
+      ...(2)>   use ExUnitFixtures
+      ...(2)>   use ExUnit.Case
+      ...(2)>
+      ...(2)>   deffixture my_model do
+      ...(2)>     # Create a model somehow...
+      ...(2)>     %{test: 1}
+      ...(2)>   end
+      ...(2)>
+      ...(2)>   @tag fixtures: [:my_model]
+      ...(2)>   test "that we have some fixtures", context do
+      ...(2)>     assert context.my_model.test == 1
+      ...(2)>   end
+      ...(2)> end
+      iex(3)> Module.defines?(MyTests, :create_my_model)
+      true
+
+  #### Fixtures with dependencies
+
+  Fixtures can also depend on other fixtures by naming a parameter after that
+  fixture. For example, if you needed to setup a database instance before
+  creating some models:
+
+      iex(4)> defmodule MyTests2 do
+      ...(4)>   use ExUnitFixtures
+      ...(4)>   use ExUnit.Case
+      ...(4)>
+      ...(4)>   deffixture database do
+      ...(4)>     # set up the database somehow...
+      ...(4)>   end
+      ...(4)>
+      ...(4)>   deffixture my_model(database) do
+      ...(4)>     # use the database to insert a model
+      ...(4)>   end
+      ...(4)>
+      ...(4)>   @tag fixtures: [:my_model]
+      ...(4)>   test "something", %{my_model: my_model} do
+      ...(4)>     # Test something with my_model
+      ...(4)>   end
+      ...(4)> end
+      iex(5)> Module.defines?(MyTests2, :create_database)
+      true
+      iex(6)> Module.defines?(MyTests2, :create_my_model)
+      true
+
+  In the sample above, we have 2 fixtures: one which creates the database and
+  another which inserts a model into that database. The test function depends on
+  `my_model` which depends on the database. ExUnitFixtures knows this, and takes
+  care of setting up the database and passing it in to `my_model`.
+
+  #### Tearing down Fixtures
+
+  If you need to do some teardown work for a fixture you can use the ExUnit
+  `on_exit` function:
+
+      iex(8)>     defmodule TestWithTearDowns do
+      ...(8)>       use ExUnitFixtures
+      ...(8)>       use ExUnit.Case
+      ...(8)>
+      ...(8)>       deffixture database do
+      ...(8)>         # Setup the database
+      ...(8)>         on_exit fn ->
+      ...(8)>           # Tear down the database
+      ...(8)>           nil
+      ...(8)>         end
+      ...(8)>       end
+      ...(8)>     end
+      iex(9)> Module.defines?(MyTests2, :create_database)
+      true
   """
 
-  defmodule FixtureInfo do
-    @moduledoc """
-    Stores information about a fixture.
-    """
-
-    defstruct name: nil, func: nil, dep_names: []
-
-    @type t :: %__MODULE__{
-      name: :atom,
-      func: {:atom, :atom},
-      dep_names: [:atom]
-    }
-  end
+  alias ExUnitFixtures.FixtureInfo
 
   @doc """
-  Defines a fixture.
+  Defines a fixture local to a test module.
+
+  This is intended to be used much like a def statement:
+
+      deffixture my_fixture do
+        "my_fixture_text"
+      end
+
+  A fixture may optionally depend on other fixtures. This is done by creating a
+  fixture that accepts parameters named after other fixtures. These fixtures
+  will automatically be run and injected as parameters to the current fixture.
+  For example:
+
+      deffixture database do
+        %{database: true}
+      end
+
+      deffixture model(database) do
+        %{model: true}
+      end
   """
   defmacro deffixture({name, info, params}, body) do
     if name == :context do
@@ -61,99 +143,8 @@ defmodule ExUnitFixtures do
           {fixture.name, fixture}
         end
 
-        {:ok, ExUnitFixtures.fixtures_for_context(context, fixtures)}
+        {:ok, ExUnitFixtures.Imp.fixtures_for_context(context, fixtures)}
       end
     end
-  end
-
-  @doc """
-  Creates the required fixtures for a given test context.
-  """
-  @spec fixtures_for_context(%{}, %{}) :: %{}
-  def fixtures_for_context(context, all_fixtures) do
-    if context[:fixtures] do
-      fixtures =
-        context.fixtures
-          |> Enum.flat_map(&(fixture_and_deps &1, all_fixtures))
-          |> Enum.uniq
-          |> topsort_fixtures
-          |> Enum.reduce(%{context: context}, &create_fixture/2)
-          |> Map.take(context.fixtures)
-
-      Map.merge(context, fixtures)
-    else
-      context
-    end
-  end
-
-  @spec fixture_and_deps(:atom, %{atom: FixtureInfo.t}) :: [FixtureInfo.t]
-  defp fixture_and_deps(:context, _), do: []
-  defp fixture_and_deps(fixture_name, all_fixtures) do
-    # Gets a fixture & it's dependencies from all the potential fixtures.
-    fixture_info = all_fixtures[fixture_name]
-    unless fixture_info do
-      fixture_name = String.Chars.to_string(fixture_name)
-      suggestion =
-        all_fixtures
-        |> Map.keys
-        |> Enum.map(&String.Chars.to_string/1)
-        |> Enum.sort_by(&(String.jaro_distance &1, fixture_name), &>=/2)
-        |> List.first
-
-      err = "Could not find a fixture named #{fixture_name}."
-      if suggestion do
-        err = err <> " Did you mean #{suggestion}?"
-      end
-      raise err
-    end
-
-    deps = Enum.flat_map(fixture_info.dep_names,
-                         &(fixture_and_deps &1, all_fixtures))
-    deps ++ [fixture_info]
-  end
-
-  @spec create_fixture(:atom, %{}) :: term
-  defp create_fixture(fixture_info, created_fixtures) do
-    # Creates a fixture from it's fixture_info & deps, then inserts it into the
-    # created_fixtures map.
-    args = for dep_name <- fixture_info.dep_names do
-      created_fixtures[dep_name]
-    end
-
-    {mod, func} = fixture_info.func
-    new_fixture = :erlang.apply(mod, func, args)
-
-    Map.put(created_fixtures, fixture_info.name, new_fixture)
-  end
-
-  @spec topsort_fixtures([FixtureInfo.t]) :: [FixtureInfo.t]
-  defp topsort_fixtures(fixtures) do
-    # Sorts a list of fixtures by their dependencies.
-    graph = :digraph.new([:acyclic])
-    try do
-      fixtures_to_graph(fixtures, graph)
-      for fixture_name <- :digraph_utils.topsort(graph) do
-        {_, fixture_info} = :digraph.vertex(graph, fixture_name)
-        fixture_info
-      end
-    after
-      :digraph.delete(graph)
-    end
-  end
-
-  @spec fixtures_to_graph([FixtureInfo.t], :digraph.graph) :: nil
-  defp fixtures_to_graph(fixtures, graph) do
-    for fixture <- fixtures do
-      name = fixture.name
-      ^name = :digraph.add_vertex(graph, name, fixture)
-    end
-
-    for fixture <- fixtures,
-        dep_name <- fixture.dep_names,
-        dep_name != :context do
-          [:"$e" | _] = :digraph.add_edge(graph, dep_name, fixture.name)
-    end
-
-    nil
   end
 end
