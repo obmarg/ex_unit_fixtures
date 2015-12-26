@@ -22,10 +22,10 @@ the tests context.
 
 ## Installation
 
-  1. Add exunit_fixtures to your list of dependencies in `mix.exs`:
+  1. Add ex_unit_fixtures to your list of dependencies in `mix.exs`:
 
         def deps do
-          [{:ex_unit_fixtures, github: "obmarg/ex_unit_fixtures", only: [:test]}]
+          [{:ex_unit_fixtures, "~> 0.1.0", only: [:test]}]
         end
 
 ## Using ExUnit
@@ -48,7 +48,7 @@ requires this fixture:
         assert context.my_model.test == 1
       end
     end
-    
+
 #### Fixtures with dependencies
 
 Fixtures can also depend on other fixtures by naming a parameter after that
