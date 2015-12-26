@@ -153,5 +153,7 @@ defmodule ExUnitFixtures do
         dep_name != :context do
           [:"$e" | _] = :digraph.add_edge(graph, dep_name, fixture.name)
     end
+
+    nil
   end
 end
