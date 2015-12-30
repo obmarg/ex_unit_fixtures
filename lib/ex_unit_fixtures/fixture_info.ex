@@ -10,11 +10,15 @@ defmodule ExUnitFixtures.FixtureInfo do
     the order that it accepts them as parameters.
   """
 
-  defstruct name: nil, func: nil, dep_names: []
+  defstruct name: nil, func: nil, dep_names: [], scope: :function
+
+  @type scope :: :test | :module
 
   @type t :: %__MODULE__{
     name: :atom,
     func: {:atom, :atom},
-    dep_names: [:atom]
+    dep_names: [:atom],
+    scope: scope
   }
+
 end
