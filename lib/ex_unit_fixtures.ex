@@ -2,6 +2,9 @@ defmodule ExUnitFixtures do
   @moduledoc """
   A library for declaring & using test fixtures in ExUnit.
 
+  For an overview of it's purpose see the
+  [README](http://hexdocs.pm/ex_unit_fixtures/README.html).
+
   To use ExUnitFixtures, you should `use ExUnitFixtures` in your test case
   (before `use ExUnit.Case`), and then define your fixtures using
   `deffixture/3`. These fixtures can then be used by tagging your tests with the

@@ -28,7 +28,12 @@ the tests context.
           [{:ex_unit_fixtures, "~> 0.1.0", only: [:test]}]
         end
 
-## Using ExUnit
+## Documentation
+
+The documentation can be found on hexdocs.pm:
+http://hexdocs.pm/ex_unit_fixtures/ExUnitFixtures.html
+
+## Example
 
 For example, lets say some of your tests required a model named `my_model`, you
 need to define the fixture using `deffixture` and then tag your test to say it
@@ -49,44 +54,5 @@ requires this fixture:
       end
     end
 
-#### Fixtures with dependencies
-
-Fixtures can also depend on other fixtures by naming a parameter after that
-fixture. For example, if you needed to setup a database instance before creating
-some models:
-
-    deffixture database do
-      # set up the database somehow...
-    end
-
-    deffixture my_model(database) do
-      # use the database to insert a model
-    end
-
-    @tag fixtures: [:my_model]
-    test "something" do
-      # Test
-    end
-
-In the sample above, we have 2 fixtures: one which creates the database and
-another which inserts a model into that database. The test function depends on
-`my_model` which depends on the database. ExUnitFixtures knows this, and takes
-care of setting up the database and passing it in to `my_model`.
-
-#### Tearing down Fixtures
-
-If you need to do some teardown work for a fixture you can use the ExUnit
-`on_exit` function:
-
-    defmodule TestWithTearDowns do
-      use ExUnitFixtures
-      use ExUnit.Case
-
-      deffixture database do
-        # Setup the database
-        on_exit fn ->
-          # Tear down the database
-          nil
-        end
-      end
-    end
+More details can be found in
+[the documentation](http://hexdocs.pm/ex_unit_fixtures/ExUnitFixtures.html).
