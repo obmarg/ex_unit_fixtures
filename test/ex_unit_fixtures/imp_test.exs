@@ -1,7 +1,8 @@
 defmodule ExUnitFixturesImpTest do
   use ExUnit.Case
 
-  alias ExUnitFixtures.{Imp, FixtureInfo}
+  alias ExUnitFixtures.Imp
+  alias ExUnitFixtures.FixtureInfo
 
   test "test_scoped_fixtures fails when given a missing fixture" do
     assert_raise RuntimeError, ~r/Could not find a fixture named test/, fn ->
