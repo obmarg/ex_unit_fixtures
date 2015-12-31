@@ -61,8 +61,8 @@ defmodule ExUnitFixtures do
 
   Fixtures may optionally be provided with a scope:
 
-  - `:test` scoped fixtures will be created before a test and deleted afterwards.
-    This is the default scope for a fixture.
+  - `:test` scoped fixtures will be created before a test and deleted
+    afterwards. This is the default scope for a fixture.
   - `:module` scoped fixtures will be created at the start of a test module and
     passed to every single test in the module.
 
@@ -124,6 +124,8 @@ defmodule ExUnitFixtures do
   These options are supported:
 
   - `scope` controls the scope of fixtures. See Fixture Scoping for details.
+  - Passing `autouse: true` will cause a fixture to be passed to every test in
+    the module.
   """
   defmacro deffixture({name, info, params}, opts \\ [], body) do
     if name == :context do
@@ -139,6 +141,7 @@ defmodule ExUnitFixtures do
     end
 
     scope = Dict.get(opts, :scope, :function)
+    autouse = Dict.get(opts, :autouse, false)
 
     quote do
       def unquote({create_name, info, params}), unquote(body)
@@ -146,7 +149,8 @@ defmodule ExUnitFixtures do
       @fixtures %FixtureInfo{name: unquote(name),
                              func: {__MODULE__, unquote(create_name)},
                              dep_names: unquote(dep_names),
-                             scope: unquote(scope)}
+                             scope: unquote(scope),
+                             autouse: unquote(autouse)}
     end
   end
 
