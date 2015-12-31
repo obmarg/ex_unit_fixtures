@@ -24,7 +24,7 @@ defmodule ExUnitFixtures do
       iex(3)> Module.defines?(MyTests, :create_my_model)
       true
 
-  #### Fixtures with dependencies
+  ## Fixtures with dependencies
 
   Fixtures can also depend on other fixtures by naming a parameter after that
   fixture. For example, if you needed to setup a database instance before
@@ -57,7 +57,18 @@ defmodule ExUnitFixtures do
   `my_model` which depends on the database. ExUnitFixtures knows this, and takes
   care of setting up the database and passing it in to `my_model`.
 
-  #### Tearing down Fixtures
+  ## Fixture Scoping
+
+  Fixtures may optionally be provided with a scope:
+
+  - `:test` scoped fixtures will be created before a test and deleted afterwards.
+    This is the default scope for a fixture.
+  - `:module` scoped fixtures will be created at the start of a test module and
+    passed to every single test in the module.
+
+  For details on how to specify scopes, see `deffixture/3`.
+
+  ## Tearing down Fixtures
 
   If you need to do some teardown work for a fixture you can use the ExUnit
   `on_exit` function:
@@ -101,6 +112,18 @@ defmodule ExUnitFixtures do
       deffixture model(database) do
         %{model: true}
       end
+
+  #### Fixture Options
+
+  Fixtures can accept various options that control how they are defined:
+
+      deffixture database, scope: :module do
+        %{database: true}
+      end
+
+  These options are supported:
+
+  - `scope` controls the scope of fixtures. See Fixture Scoping for details.
   """
   defmacro deffixture({name, info, params}, opts \\ [], body) do
     if name == :context do
