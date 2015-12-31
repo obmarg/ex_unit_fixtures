@@ -4,7 +4,7 @@ defmodule ExUnitFixtures do
 
   To use ExUnitFixtures, you should `use ExUnitFixtures` in your test case
   (before `use ExUnit.Case`), and then define your fixtures using
-  `deffixture/2`. These fixtures can then be used by tagging your tests with the
+  `deffixture/3`. These fixtures can then be used by tagging your tests with the
   `fixtures` tag. For example:
 
       iex(2)> defmodule MyTests do
@@ -24,7 +24,7 @@ defmodule ExUnitFixtures do
       iex(3)> Module.defines?(MyTests, :create_my_model)
       true
 
-  #### Fixtures with dependencies
+  ## Fixtures with dependencies
 
   Fixtures can also depend on other fixtures by naming a parameter after that
   fixture. For example, if you needed to setup a database instance before
@@ -57,7 +57,18 @@ defmodule ExUnitFixtures do
   `my_model` which depends on the database. ExUnitFixtures knows this, and takes
   care of setting up the database and passing it in to `my_model`.
 
-  #### Tearing down Fixtures
+  ## Fixture Scoping
+
+  Fixtures may optionally be provided with a scope:
+
+  - `:test` scoped fixtures will be created before a test and deleted afterwards.
+    This is the default scope for a fixture.
+  - `:module` scoped fixtures will be created at the start of a test module and
+    passed to every single test in the module.
+
+  For details on how to specify scopes, see `deffixture/3`.
+
+  ## Tearing down Fixtures
 
   If you need to do some teardown work for a fixture you can use the ExUnit
   `on_exit` function:
@@ -101,8 +112,20 @@ defmodule ExUnitFixtures do
       deffixture model(database) do
         %{model: true}
       end
+
+  #### Fixture Options
+
+  Fixtures can accept various options that control how they are defined:
+
+      deffixture database, scope: :module do
+        %{database: true}
+      end
+
+  These options are supported:
+
+  - `scope` controls the scope of fixtures. See Fixture Scoping for details.
   """
-  defmacro deffixture({name, info, params}, body) do
+  defmacro deffixture({name, info, params}, opts \\ [], body) do
     if name == :context do
       raise """
       The name context is reserved for the ExUnit context.
@@ -115,12 +138,15 @@ defmodule ExUnitFixtures do
       dep_name
     end
 
+    scope = Dict.get(opts, :scope, :function)
+
     quote do
       def unquote({create_name, info, params}), unquote(body)
 
       @fixtures %FixtureInfo{name: unquote(name),
                              func: {__MODULE__, unquote(create_name)},
-                             dep_names: unquote(dep_names)}
+                             dep_names: unquote(dep_names),
+                             scope: unquote(scope)}
     end
   end
 
@@ -129,21 +155,25 @@ defmodule ExUnitFixtures do
       if is_list(Module.get_attribute(__MODULE__, :ex_unit_tests)) do
         raise "`use ExUnitFixtures` must come before `use ExUnit.Case`"
       end
+
       Module.register_attribute __MODULE__, :fixtures, accumulate: true
       @before_compile ExUnitFixtures
 
-      import ExUnitFixtures, only: [deffixture: 2]
+      import ExUnitFixtures
     end
   end
 
   defmacro __before_compile__(_) do
     quote do
-      setup context do
-        fixtures = for fixture <- @fixtures, into: %{} do
-          {fixture.name, fixture}
-        end
+      @_grouped_fixtures for f <- @fixtures, into: %{}, do: {f.name, f}
 
-        {:ok, ExUnitFixtures.Imp.fixtures_for_context(context, fixtures)}
+      setup_all do
+        {:ok, ExUnitFixtures.Imp.module_scoped_fixtures(@_grouped_fixtures)}
+      end
+
+      setup context do
+        {:ok, ExUnitFixtures.Imp.test_scoped_fixtures(context,
+                                                      @_grouped_fixtures)}
       end
     end
   end

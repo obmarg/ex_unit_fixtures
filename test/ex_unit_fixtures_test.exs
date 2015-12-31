@@ -28,8 +28,20 @@ defmodule ExunitFixturesTest do
     ref
   end
 
-  setup do
-    {:ok, %{setup_ran: true}}
+  deffixture module_fixture(), scope: :module do
+    :woo_modules
+  end
+
+  deffixture test_fixture_with_module_fixture(module_fixture) do
+    module_fixture
+  end
+
+  setup_all do
+    {:ok, %{setup_all_ran: true}}
+  end
+
+  setup context do
+    {:ok, %{setup_ran: true, setup_all_ran: context.setup_all_ran}}
   end
 
   test "deffixture generates a function that can create a fixture" do
@@ -80,5 +92,19 @@ defmodule ExunitFixturesTest do
   @tag fun_things: "Clowns"
   test "fixtures can access the test context", context do
     assert context.fixture_with_context == "Clowns"
+  end
+
+  @tag fixtures: [:module_fixture]
+  test "module level fixtures can be accessed", context do
+    assert context.module_fixture == :woo_modules
+  end
+
+  @tag fixtures: [:test_fixture_with_module_fixture]
+  test "test fixtures can depend on module level fixtures", context do
+    assert context.test_fixture_with_module_fixture == :woo_modules
+  end
+
+  test "other setup_all functions still run", context do
+    assert context.setup_all_ran
   end
 end

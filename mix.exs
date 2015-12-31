@@ -50,9 +50,7 @@ defmodule ExUnitFixtures.Mixfile do
     [
       maintainers: ["Graeme Coupar <grambo@grambo.me.uk>"],
       licenses: ["MIT"],
-      links: %{"GitHub" => "https://github.com/obmarg/ex_unit_fixtures",
-               # TODO: Add doc link in here.
-               }
+      links: %{"GitHub" => "https://github.com/obmarg/ex_unit_fixtures"}
     ]
   end
 
