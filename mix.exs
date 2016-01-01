@@ -48,7 +48,7 @@ defmodule ExUnitFixtures.Mixfile do
 
   defp package do
     [
-      maintainers: ["Graeme Coupar <grambo@grambo.me.uk>"],
+      maintainers: ["Graeme Coupar"],
       licenses: ["MIT"],
       links: %{"GitHub" => "https://github.com/obmarg/ex_unit_fixtures"}
     ]
