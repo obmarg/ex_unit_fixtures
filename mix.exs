@@ -14,7 +14,7 @@ defmodule ExUnitFixtures.Mixfile do
      name: "ExUnitFixtures",
      source_url: "https://github.com/obmarg/ex_unit_fixtures",
      homepage_url: "https://github.com/obmarg/ex_unit_fixtures",
-     docs: [main: "README",
+     docs: [main: "ExUnitFixtures",
             extras: [{"README.md", [path: "README",
                                     title: "Read Me"]},
                      "CONTRIBUTING.md"]]]
