@@ -43,15 +43,22 @@ defmodule ExUnitFixtures.Imp do
   @spec test_scoped_fixtures(%{}, fixture_infos) :: fixtures
   def test_scoped_fixtures(context, fixture_infos) do
     module_fixtures = module_fixture_names(fixture_infos)
+    autouse_fixtures = for {_, f} <- fixture_infos, f.autouse, do: f.name
 
-    if context[:fixtures] do
+    fixtures = if context[:fixtures] do
+      Enum.uniq(autouse_fixtures ++ context[:fixtures])
+    else
+      autouse_fixtures
+    end
+
+    if length(fixtures) != 0 do
       existing_fixtures =
         context
           |> Dict.take(module_fixtures)
           |> Dict.put(:context, context)
 
       test_fixtures =
-        context.fixtures
+        fixtures
           |> list_difference(module_fixtures)
           |> create_fixtures(fixture_infos, existing_fixtures)
 

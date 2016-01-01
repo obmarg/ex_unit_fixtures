@@ -36,6 +36,10 @@ defmodule ExunitFixturesTest do
     module_fixture
   end
 
+  deffixture autouse_fixture, autouse: true do
+    :automagic
+  end
+
   setup_all do
     {:ok, %{setup_all_ran: true}}
   end
@@ -106,5 +110,19 @@ defmodule ExunitFixturesTest do
 
   test "other setup_all functions still run", context do
     assert context.setup_all_ran
+  end
+
+  test "autouse fixture is used when no fixtures requested", context do
+    assert context.autouse_fixture == :automagic
+  end
+
+  @tag fixtures: [:simple]
+  test "autouse fixture is used when a fixture is requested", context do
+    assert context.autouse_fixture == :automagic
+  end
+
+  @tag fixtures: [:autouse_fixture]
+  test "asking for an autouse fixture is ok", context do
+    assert context.autouse_fixture == :automagic
   end
 end
