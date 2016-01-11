@@ -42,24 +42,24 @@ defmodule ExUnitFixtures.FixtureModule do
   current module or importing modules will only be able to get the overriding
   fixture.
 
-     defmodule MyFixtures do
-       use ExUnitFixtures.FixtureModule
+      defmodule MyFixtures do
+        use ExUnitFixtures.FixtureModule
 
-       deffixture user do
-         make_user()
-       end
-     end
+        deffixture user do
+          make_user()
+        end
+      end
 
-     defmodule InactiveUserTests do
-       deffixture user(user) do
-         %{user | active: false}
-       end
+      defmodule InactiveUserTests do
+        deffixture user(user) do
+          %{user | active: false}
+        end
 
-       @tag fixtures: [:user]
-       test "that user is inactive", %{user: user} do
-         assert user.active == false
-       end
-     end
+        @tag fixtures: [:user]
+        test "that user is inactive", %{user: user} do
+          assert user.active == false
+        end
+      end
 
   #### Loading Fixture Code
 
@@ -100,7 +100,8 @@ defmodule ExUnitFixtures.FixtureModule do
   end
 
   @doc """
-  Body of the nested __using__ func in any module that has used `FixtureModule`.
+  Body of the nested `__using__` func in any module that has used
+  `FixtureModule`.
   """
   def register_fixtures(fixture_module, _opts) do
     quote do
