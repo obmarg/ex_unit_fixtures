@@ -93,41 +93,8 @@ defmodule ExUnitFixtures do
 
   ## Sharing Fixtures Amongst Test Cases.
 
-  Fixtures are fully compatible with `ExUnit.CaseTemplate` - this is the current
-  recommended way to share some fixtures among a number of files. Simply defined
-  your fixtures in an ExUnit.CaseTemplate, and then any file that imports that
-  CaseTemplate with use will have access to all the fixtures defined within. For
-  example:
-
-      defmodule MyFixtures do
-        use ExUnitFixtures
-        use ExUnit.CaseTemplate
-
-        deffixture database do
-          # Setup the database.
-          %{database: :db}
-        end
-      end
-
-      def Tests do
-        use MyFixtures
-        use ExUnit.Case
-
-        @tag fixtures: [:database]
-        test "that we have a database", %{database: db} do
-          assert db == :db
-        end
-      end
-
-  Currently a test case can't use both fixtures imported from a CaseTemplate
-  _and_ locally defined fixtures, though there are plans to add support for that
-  in the future.
-
-  Note: The example above will work as is if both modules are defined in the
-  same file. However, you'll need to do some work to ensure your CaseTemplate is
-  loaded when your tests are running. You can do this using the `Code.load_file`
-  function in your `test_helper.exs` file, [as described in this stack overflow
-  answer](http://stackoverflow.com/a/30652675/589746).
+  It is possible to share fixtures among test cases using
+  `ExUnitFixtures.FixtureModule`.
   """
 
   alias ExUnitFixtures.FixtureDef
