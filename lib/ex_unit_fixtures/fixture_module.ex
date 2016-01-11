@@ -55,6 +55,7 @@ defmodule ExUnitFixtures.FixtureModule do
          %{user | active: false}
        end
 
+       @tag fixtures: [:user]
        test "that user is inactive", %{user: user} do
          assert user.active == false
        end
