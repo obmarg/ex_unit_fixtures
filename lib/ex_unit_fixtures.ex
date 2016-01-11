@@ -130,7 +130,7 @@ defmodule ExUnitFixtures do
   answer](http://stackoverflow.com/a/30652675/589746).
   """
 
-  alias ExUnitFixtures.FixtureInfo
+  alias ExUnitFixtures.FixtureDef
 
   @doc """
   Defines a fixture local to a test module.
@@ -185,13 +185,18 @@ defmodule ExUnitFixtures do
     autouse = Dict.get(opts, :autouse, false)
 
     quote do
+      ExUnitFixtures.Imp.Preprocessing.check_clashes(unquote(name), @fixtures)
+
       def unquote({create_name, info, params}), unquote(body)
 
-      @fixtures %FixtureInfo{name: unquote(name),
-                             func: {__MODULE__, unquote(create_name)},
-                             dep_names: unquote(dep_names),
-                             scope: unquote(scope),
-                             autouse: unquote(autouse)}
+      @fixtures %FixtureDef{
+        name: unquote(name),
+        func: {__MODULE__, unquote(create_name)},
+        dep_names: unquote(dep_names),
+        scope: unquote(scope),
+        autouse: unquote(autouse),
+        qualified_name: Module.concat(__MODULE__, unquote(name))
+      }
     end
   end
 
@@ -200,6 +205,10 @@ defmodule ExUnitFixtures do
       if is_list(Module.get_attribute(__MODULE__, :ex_unit_tests)) do
         raise "`use ExUnitFixtures` must come before `use ExUnit.Case`"
       end
+
+      Module.register_attribute(__MODULE__,
+                                :fixture_modules,
+                                accumulate: true)
 
       Module.register_attribute __MODULE__, :fixtures, accumulate: true
       @before_compile ExUnitFixtures
@@ -210,15 +219,17 @@ defmodule ExUnitFixtures do
 
   defmacro __before_compile__(_) do
     quote do
-      @_grouped_fixtures for f <- @fixtures, into: %{}, do: {f.name, f}
+      @_processed_fixtures ExUnitFixtures.Imp.Preprocessing.preprocess_fixtures(
+        @fixtures, @fixture_modules
+      )
 
       setup_all do
-        {:ok, ExUnitFixtures.Imp.module_scoped_fixtures(@_grouped_fixtures)}
+        {:ok, ExUnitFixtures.Imp.module_scoped_fixtures(@_processed_fixtures)}
       end
 
       setup context do
         {:ok, ExUnitFixtures.Imp.test_scoped_fixtures(context,
-                                                      @_grouped_fixtures)}
+                                                      @_processed_fixtures)}
       end
     end
   end

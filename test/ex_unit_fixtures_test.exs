@@ -53,9 +53,12 @@ defmodule ExunitFixturesTest do
   end
 
   test "deffixture adds the fixture to @fixtures" do
-    expected = %ExUnitFixtures.FixtureInfo{name: :simple,
-                                           func: {ExunitFixturesTest,
-                                                  :fixture_create_simple}}
+    expected = %ExUnitFixtures.FixtureDef{
+      name: :simple,
+      func: {ExunitFixturesTest,
+             :fixture_create_simple},
+      qualified_name: :"Elixir.ExunitFixturesTest.simple"
+    }
     assert expected in @fixtures
   end
 
