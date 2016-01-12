@@ -30,11 +30,11 @@ defmodule PreprocessingTest do
 
     assert output[:"Test.fixture_one"].dep_names == []
     assert output[:"Test.fixture_one"].qualified_dep_names == []
-    assert output[:"Test.fixture_one"].hidden == false
+    refute output[:"Test.fixture_one"].hidden
 
     assert output[:"Test.fixture_two"].dep_names == [:fixture_one]
     assert output[:"Test.fixture_two"].qualified_dep_names == [:"Test.fixture_one"]
-    assert output[:"Test.fixture_two"].hidden == false
+    refute output[:"Test.fixture_two"].hidden
   end
 
   test "preprocess_fixtures with an imported module and no clash" do
@@ -54,12 +54,12 @@ defmodule PreprocessingTest do
     assert output[:"Test.fixture_two"] != nil
     assert Dict.size(output) == 2
 
-    assert output[:"Fixtures.fixture_one"].hidden == false
+    refute output[:"Fixtures.fixture_one"].hidden
 
     assert output[:"Test.fixture_two"].qualified_dep_names == [
       :"Fixtures.fixture_one"
     ]
-    assert output[:"Test.fixture_two"].hidden == false
+    refute output[:"Test.fixture_two"].hidden
   end
 
   test "preprocess_fixtures hides clashes" do
@@ -79,12 +79,12 @@ defmodule PreprocessingTest do
     assert output[:"Test.fixture_one"] != nil
     assert Dict.size(output) == 2
 
-    assert output[:"Fixtures.fixture_one"].hidden == true
+    assert output[:"Fixtures.fixture_one"].hidden
 
     assert output[:"Test.fixture_one"].qualified_dep_names == [
       :"Fixtures.fixture_one"
     ]
-    assert output[:"Test.fixture_one"].hidden == false
+    refute output[:"Test.fixture_one"].hidden
   end
 
   test "resolve_dependencies with missing deps fails" do

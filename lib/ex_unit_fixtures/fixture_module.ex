@@ -64,10 +64,10 @@ defmodule ExUnitFixtures.FixtureModule do
   #### Loading Fixture Code
 
   Note: The example above will work if both modules are defined in the same
-  file. If not, however, you'll need to do some work to ensure your CaseTemplate is
-  loaded when your tests are running. You can do this using the `Code.load_file`
-  function in your `test_helper.exs` file, [as described in this stack overflow
-  answer](http://stackoverflow.com/a/30652675/589746).
+  file. If not, however, you'll need to do some work to ensure your CaseTemplate
+  is loaded when your tests are running. You can do this using the
+  `Code.load_file` function in your `test_helper.exs` file, [as described in
+  this stack overflow answer](http://stackoverflow.com/a/30652675/589746).
   """
 
   defmacro __using__(_opts) do

@@ -58,7 +58,7 @@ defmodule ExUnitFixtures.Imp.Preprocessing do
   def resolve_dependencies(local_fixtures, imported_fixtures) do
     visible_fixtures =
       for {_, f} <- imported_fixtures,
-      f.hidden == false,
+      !f.hidden,
       into: %{},
       do: {f.name, f}
 
@@ -118,7 +118,7 @@ defmodule ExUnitFixtures.Imp.Preprocessing do
   end
 
 
-  @spec validate_dep(FixtureDef.t, FixtureDef.t) :: any
+  @spec validate_dep(FixtureDef.t, FixtureDef.t) :: :ok | no_return
   defp validate_dep(%{scope: :module, name: fixture_name},
                     %{scope: :test, name: dep_name}) do
     raise """
@@ -126,7 +126,7 @@ defmodule ExUnitFixtures.Imp.Preprocessing do
       #{fixture_name} is scoped to the test module
       #{dep_name} is scoped to the test.
       But #{fixture_name} depends on #{dep_name}
-      """
+    """
   end
   defp validate_dep(_fixture, _resolved_dep), do: :ok
 end
