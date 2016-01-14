@@ -99,6 +99,24 @@ defmodule ExUnitFixtures do
   alias ExUnitFixtures.FixtureDef
 
   @doc """
+  Starts the ExUnitFixtures application.
+  """
+  def start() do
+    Application.ensure_all_started(:ex_unit_fixtures)
+  end
+
+  @doc false
+  def start(_type, _args) do
+    import Supervisor.Spec, warn: false
+
+    children = [
+      worker(ExUnitFixtures.Imp.ModuleStore, []),
+    ]
+
+    Supervisor.start_link(children, strategy: :one_for_one, name: ExUnitFixtures)
+  end
+
+  @doc """
   Defines a fixture local to a test module.
 
   This is intended to be used much like a def statement:

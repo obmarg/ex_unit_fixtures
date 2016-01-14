@@ -81,6 +81,8 @@ defmodule ExUnitFixtures.FixtureModule do
                                 :fixture_modules,
                                 accumulate: true)
 
+      ExUnitFixtures.Imp.ModuleStore.register(__MODULE__, __ENV__.file)
+
       defmacro __using__(opts) do
         ExUnitFixtures.FixtureModule.register_fixtures(__MODULE__, opts)
       end
