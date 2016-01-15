@@ -105,7 +105,7 @@ defmodule ExUnitFixtures.FixtureModule do
   Body of the nested `__using__` func in any module that has used
   `FixtureModule`.
   """
-  def register_fixtures(fixture_module, _opts) do
+  def register_fixtures(fixture_module, _opts \\ []) do
     quote do
       Module.register_attribute(__MODULE__,
                                 :fixture_modules,

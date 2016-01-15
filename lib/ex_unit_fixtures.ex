@@ -117,6 +117,19 @@ defmodule ExUnitFixtures do
   end
 
   @doc """
+  Loads all files it finds matching `fixture_pattern` into the VM.
+  """
+  @spec load_fixture_files(Regex.t) :: nil
+  def load_fixture_files(fixture_pattern \\ "test/**/fixtures.exs") do
+    paths =
+      fixture_pattern
+    |> Path.wildcard
+    |> Enum.sort_by(fn (v) -> v |> Path.split |> Enum.count end)
+
+    modules = Enum.map(paths, &Code.load_file/1)
+  end
+
+  @doc """
   Defines a fixture local to a test module.
 
   This is intended to be used much like a def statement:
