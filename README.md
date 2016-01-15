@@ -15,10 +15,12 @@ this.  These work well for simpler cases, but have a couple of drawbacks:
 - The setup code will run for all tests, even if the test does not need it.
 - Sharing setup code between modules requires extracting it out into a function.
 
-ExUnitFixtures attempts to solve that. It provides a way to define a fixture,
-which can be any bit of setup code that a test might require. Each of the tests
-in a file can then list the fixtures they require and have them injected into
-the tests context.
+Neither of these are deal breakers but we can do better.
+
+ExUnitFixtures attempts to do so. It provides a way to define a fixture, which
+can be any bit of setup code or data that a test might require. Each of the
+tests in a file can then list the fixtures they require and have them injected
+into a tests context as appropriate.
 
 ## Installation
 
