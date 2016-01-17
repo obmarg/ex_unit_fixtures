@@ -1,14 +1,54 @@
 defmodule ExUnitFixtures.AutoImport do
   @moduledoc """
-  A mechanism for automatically importing fixture modules into the current file.
+  A mechanism for automatically importing fixtures into the current test module.
+
+  In a relatively large test suite, you'll most likely need to declare some
+  fixtures that are to be shared between all tests in a project or module.
+  `ExUnitFixtures.AutoImport` provides a method for automatically importing
+  fixtures into a test module based on the module's path.
 
   When you `use ExUnitFixtures.AutoImport`, it will automatically lookup
-  `fixtures.exs` files in the current and parent directories, and import them
-  into the current test file for use.
+  `fixtures.exs` files in the current and parent directories, and import the
+  fixtures they contain into the current test file for use.
 
-  They will be imported in descending file heirarchy order, so
-  `test/imp/fixtures.exs` can refer to & override fixtures in
-  `test/fixtures.exs`, but not the other way round.
+  For example, we could use the following directory structure & tests:
+
+      tests/
+          fixtures.exs
+              defmodule GlobalFixtures do
+                use ExUnitFixtures.FixtureModule
+
+                deffixture db do
+                  create_db_conn()
+                end
+              end
+
+          model_tests/
+              fixtures.exs
+                  defmodule ModelFixtures do
+                    use ExUnitFixtures.FixtureModule
+                    use ExUnitFixtures.AutoImport
+
+                    deffixture user(db) do
+                      user = %User{name: "Graeme"}
+                      insert(db, user)
+                      user
+                    end
+                  end
+
+              user_tests.exs
+                  defmodule UserTests do
+                    use ExUnitFixtures
+                    use ExUnitFixtures.AutoImport
+
+                    @tag fixtures: [:user]
+                    test "user has name", context do
+                      assert context.user.name == "Graeme"
+                    end
+
+  Here we declare a fixtures.exs file at our top-level that contains a database
+  fixture that any of our tests can access. We then define some fixtures for all
+  of our model tests, and use the user fixture inside one of those tests.
   """
 
   defmacro __using__(_opts) do
