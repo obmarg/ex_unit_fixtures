@@ -111,6 +111,7 @@ defmodule ExUnitFixtures do
 
     children = [
       worker(ExUnitFixtures.Imp.ModuleStore, []),
+      worker(ExUnitFixtures.Imp.FileLoader, [])
     ]
 
     Supervisor.start_link(children, strategy: :one_for_one, name: ExUnitFixtures)
@@ -121,12 +122,7 @@ defmodule ExUnitFixtures do
   """
   @spec load_fixture_files(Regex.t) :: nil
   def load_fixture_files(fixture_pattern \\ "test/**/fixtures.exs") do
-    paths =
-      fixture_pattern
-    |> Path.wildcard
-    |> Enum.sort_by(fn (v) -> v |> Path.split |> Enum.count end)
-
-    modules = Enum.map(paths, &Code.load_file/1)
+    ExUnitFixtures.Imp.FileLoader.load_fixture_files(fixture_pattern)
   end
 
   @doc """
