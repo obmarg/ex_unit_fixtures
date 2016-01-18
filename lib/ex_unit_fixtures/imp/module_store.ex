@@ -29,6 +29,8 @@ defmodule ExUnitFixtures.Imp.ModuleStore do
   """
   @spec find_file(String.t) :: [:atom]
   def find_file(filename) do
+    check_server_running
+
     filename = Path.absname(filename)
     Agent.get __MODULE__, fn state ->
       for {module, mod_file} <- state, mod_file == filename, do: module
@@ -40,6 +42,8 @@ defmodule ExUnitFixtures.Imp.ModuleStore do
   """
   @spec find_module(:atom) :: String.t
   def find_module(search_module) do
+    check_server_running
+
     Agent.get(__MODULE__, fn state ->
       for {module, mod_file} <- state, search_module == module, do: mod_file
     end)
