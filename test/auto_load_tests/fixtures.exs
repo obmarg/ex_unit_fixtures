@@ -3,6 +3,11 @@ defmodule AutoLoadFixtures do
   use ExUnitFixtures.AutoImport
 
   deffixture not_top_level_fixture do
+
+    on_exit fn ->
+      1
+    end
+
     :not_top
   end
 
