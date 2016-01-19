@@ -50,11 +50,6 @@ defmodule ExUnitFixtures.Imp.ModuleStore do
     |> List.first
   end
 
-  # TODO: Need to create ExUnitFixtures.start function that starts the server,
-  # and maybe does the auto-loading of fixture files.
-  # Then I can write an AutoUse (or similar) module that pulls in stuff from
-  # directory hierarchy.
-
   @spec check_server_running :: nil | no_return
   defp check_server_running do
     if Process.whereis(__MODULE__) == nil do

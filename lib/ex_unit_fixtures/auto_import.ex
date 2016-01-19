@@ -2,14 +2,20 @@ defmodule ExUnitFixtures.AutoImport do
   @moduledoc """
   A mechanism for automatically importing fixtures into the current test module.
 
-  In a relatively large test suite, you'll most likely need to declare some
+  In a relatively large test suite you'll most likely need to declare some
   fixtures that are to be shared between all tests in a project or module.
   `ExUnitFixtures.AutoImport` provides a method for automatically importing
   fixtures into a test module based on the module's path.
 
-  When you `use ExUnitFixtures.AutoImport`, it will automatically lookup
-  `fixtures.exs` files in the current and parent directories, and import the
+  When a module uses `ExUnitFixtures.AutoImport` it will automatically lookup
+  `fixtures.exs` files in the current and parent directories and import the
   fixtures they contain into the current test file for use.
+
+  Note: By default, any call to `use ExUnitFixtures` or
+  `use ExUnitFixtures.FixtureModule` will automatically
+  `use ExUnitFixtures.AutoImport` so this module should not need to be manually
+  used most of the time. This can be controlled by the `auto_import` setting as
+  described in `ExUnitFixtures.start/1`
 
   For example, we could use the following directory structure & tests:
 
@@ -27,7 +33,6 @@ defmodule ExUnitFixtures.AutoImport do
               fixtures.exs
                   defmodule ModelFixtures do
                     use ExUnitFixtures.FixtureModule
-                    use ExUnitFixtures.AutoImport
 
                     deffixture user(db) do
                       user = %User{name: "Graeme"}
@@ -39,7 +44,6 @@ defmodule ExUnitFixtures.AutoImport do
               user_tests.exs
                   defmodule UserTests do
                     use ExUnitFixtures
-                    use ExUnitFixtures.AutoImport
 
                     @tag fixtures: [:user]
                     test "user has name", context do
