@@ -84,6 +84,10 @@ defmodule ExUnitFixtures.FixtureModule do
 
       ExUnitFixtures.Imp.ModuleStore.register(__MODULE__, __ENV__.file)
 
+      if Application.get_env(:ex_unit_fixtures, :auto_import) do
+        use ExUnitFixtures.AutoImport
+      end
+
       defmacro __using__(opts) do
         ExUnitFixtures.FixtureModule.register_fixtures(__MODULE__, opts)
       end
@@ -93,7 +97,7 @@ defmodule ExUnitFixtures.FixtureModule do
   defmacro __before_compile__(_) do
     quote do
       @fixtures_ ExUnitFixtures.Imp.Preprocessing.preprocess_fixtures(
-        @fixtures, @fixture_modules
+        @fixtures, Enum.uniq(@fixture_modules)
       )
 
       def fixtures do

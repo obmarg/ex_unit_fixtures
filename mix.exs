@@ -25,7 +25,8 @@ defmodule ExUnitFixtures.Mixfile do
   # Type "mix help compile.app" for more information
   def application do
     [applications: [:logger],
-     mod: {ExUnitFixtures, []}]
+     mod: {ExUnitFixtures, []},
+     env: [auto_import: true, auto_load: true]]
   end
 
   # Dependencies can be Hex packages:

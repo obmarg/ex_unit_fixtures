@@ -100,8 +100,14 @@ defmodule ExUnitFixtures do
 
   @doc """
   Starts the ExUnitFixtures application.
+
+  The keyword list `opts` may be provided to override any of the default
+  options.
   """
-  def start() do
+  def start(opts \\ []) do
+    Enum.each opts, fn {key ,val} ->
+      Application.put_env(:ex_unit_fixtures, key, val, persistent: true)
+    end
     Application.ensure_all_started(:ex_unit_fixtures)
   end
 
@@ -110,9 +116,13 @@ defmodule ExUnitFixtures do
     import Supervisor.Spec, warn: false
 
     children = [
-      worker(ExUnitFixtures.Imp.ModuleStore, []),
-      worker(ExUnitFixtures.Imp.FileLoader, [])
-    ]
+      worker(ExUnitFixtures.Imp.ModuleStore, [])
+    ] ++
+    if Application.get_env(:ex_unit_fixtures, :auto_load) do
+      [worker(ExUnitFixtures.Imp.FileLoader, [])]
+    else
+      []
+    end
 
     Supervisor.start_link(children, strategy: :one_for_one, name: ExUnitFixtures)
   end
@@ -207,6 +217,10 @@ defmodule ExUnitFixtures do
       @before_compile ExUnitFixtures
 
       import ExUnitFixtures
+
+      if Application.get_env(:ex_unit_fixtures, :auto_import) do
+        use ExUnitFixtures.AutoImport
+      end
     end
   end
 
