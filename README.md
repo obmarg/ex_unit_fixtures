@@ -21,7 +21,7 @@ more powerful:
   1. Add ex_unit_fixtures to your list of dependencies in `mix.exs`:
 
         def deps do
-          [{:ex_unit_fixtures, "~> 0.2.0", only: [:test]}]
+          [{:ex_unit_fixtures, "~> 0.3.0", only: [:test]}]
         end
 
 ## Documentation

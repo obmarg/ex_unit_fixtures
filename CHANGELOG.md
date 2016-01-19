@@ -1,3 +1,44 @@
+### v0.3.0 (19/1/16)
+
+Added FixtureModules.  These are modules of fixtures that can be imported into
+tests or other fixture modules.
+
+ExUnitFixtures will automatically import any fixture modules that it finds
+named `fixtures.exs`, and these will automatically be used by any tests level
+with or further down in the directory heirarchy.  For example, we can now
+create this directory heirarchy:
+
+    tests/
+        fixtures.exs
+            defmodule GlobalFixtures do
+              use ExUnitFixtures.FixtureModule
+
+              deffixture db do
+                create_db_conn()
+              end
+            end
+
+        model_tests/
+            fixtures.exs
+                defmodule ModelFixtures do
+                  use ExUnitFixtures.FixtureModule
+
+                  deffixture user(db) do
+                    user = %User{name: "Graeme"}
+                    insert(db, user)
+                    user
+                  end
+                end
+
+            user_tests.exs
+                defmodule UserTests do
+                  use ExUnitFixtures
+
+                  @tag fixtures: [:user]
+                  test "user has name", context do
+                    assert context.user.name == "Graeme"
+                  end
+
 ### v0.2.0 (1/1/16)
 
 - Added module scoped fixtures that are created at the start of a test module
