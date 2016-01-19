@@ -4,10 +4,23 @@ defmodule ExUnitFixtures do
 
   For an overview of it's purpose see the [README](README.html).
 
-  To use ExUnitFixtures, you should `use ExUnitFixtures` in your test case
-  (before `use ExUnit.Case`), and then define your fixtures using
-  `deffixture/3`. These fixtures can then be used by tagging your tests with the
-  `fixtures` tag. For example:
+  To use ExUnitFixtures we need to start it. Add the following code to your
+  `test_helpers.exs`:
+
+      ExUnitFixtures.start
+
+  This starts the ExUnitFixtures application and imports any `fixtures.exs`
+  files that are found in the test directory heiararchy. See
+  `ExUnitFixtures.start/1` for more details.
+
+  Next you should:
+
+  1. Add `use ExUnitFixtures` to your test cases (before `use ExUnit.Case`)
+  2. Define some fixtures using `deffixture/3`
+  3. Tag some tests with `@tag fixtures: [:your_fixtures_here]`
+
+  The tagged tests will automatically have all the requested fixtures injected
+  into their `context`. For example:
 
       iex(2)> defmodule MyTests do
       ...(2)>   use ExUnitFixtures
@@ -92,8 +105,15 @@ defmodule ExUnitFixtures do
 
   ## Sharing Fixtures Amongst Test Cases.
 
-  It is possible to share fixtures among test cases using
-  `ExUnitFixtures.FixtureModule`.
+  It is possible to share fixtures among test cases by declaring that module a
+  fixture module. See `ExUnitFixtures.FixtureModule` for more details.
+
+  When started, `ExUnitFixtures` automatically loads any `fixtures.exs` files it
+  finds in the test directory hierarchy. Any test or fixture module will also
+  automatically import any fixtures defined in `fixtures.exs` files in it's
+  current or parent directories. This allows ExUnitFixtures to provide a
+  powerful yet simple method of sharing fixtures amongst tests in a directory
+  heirarchy.  See `ExUnitFixtures.AutoImport` for more details.
   """
 
   alias ExUnitFixtures.FixtureDef
@@ -101,8 +121,21 @@ defmodule ExUnitFixtures do
   @doc """
   Starts the ExUnitFixtures application.
 
+  By default this will also look for any `fixtures.exs` files in the test
+  directory and load them into the VM so we can use the fixtures contained
+  within. This can be controlled by the `auto_load` option described below.
+
   The keyword list `opts` may be provided to override any of the default
   options.
+
+  ### Options
+
+  - `auto_import` controls whether tests & fixture modules should automatically
+    import fixtures from `fixtures.exs` files in their directory tree. This is
+    true by default
+  - `auto_load` controls whether `ExUnitFixtures` should automatically load
+    `fixtures.exs` files it finds in the test directory tree on startup. This is
+    true by default.
   """
   def start(opts \\ []) do
     Enum.each opts, fn {key ,val} ->

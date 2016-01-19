@@ -63,11 +63,21 @@ defmodule ExUnitFixtures.FixtureModule do
 
   #### Loading Fixture Code
 
-  Note: The example above will work if both modules are defined in the same
-  file. If not, however, you'll need to do some work to ensure your CaseTemplate
-  is loaded when your tests are running. You can do this using the
-  `Code.load_file` function in your `test_helper.exs` file, [as described in
-  this stack overflow answer](http://stackoverflow.com/a/30652675/589746).
+  All the examples in this file have shown a fixture module defined within the
+  same file as the tests. This is not too likely to happen in an actual project.
+  It's more likely that you'd want to define a fixture module in one file and
+  then import it into many other files.
+
+  By default ExUnitFixtures makes this fairly easy - any file named
+  `fixtures.exs` in any folder underneath `test/` will automatically be loaded
+  into the VM when calling `ExUnitFixtures.start/1`.
+
+  Any fixture modules defined within these files will also automatically be
+  imported into the current module as documented in `ExUnitFixtures.AutoImport`.
+
+  If you wish to load in fixtures that are not contained within a `fixtures.exs`
+  file, then you should load them into the VM with `Code.require_file` in your
+  `test_helpers.exs` and then manually `use` the fixture module.
   """
 
   defmacro __using__(_opts) do

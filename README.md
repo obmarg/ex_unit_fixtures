@@ -1,26 +1,20 @@
 # ExUnitFixtures
 
-A library for defining test fixtures for ExUnit tests. Inspired by py.test
-fixtures.
+A library for defining modular dependencies (fixtures) for ExUnit tests.
 
 #### What are Fixtures?
 
-Fixtures in ExUnitFixtures are just functions that will be run before a test.
+Fixtures in ExUnitFixtures are just functions that are run before a test.
+
 They can be used to setup the tests environment somehow, or provide the test
-with some data that it requires.
+with some data that it requires. Similar in purpose to `setup` & `setup_all` but
+more powerful:
 
-ExUnit provides the `setup` and `setup_all` functions that can be used for
-this.  These work well for simpler cases, but have a couple of drawbacks:
-
-- The setup code will run for all tests, even if the test does not need it.
-- Sharing setup code between modules requires extracting it out into a function.
-
-Neither of these are deal breakers but we can do better.
-
-ExUnitFixtures attempts to do so. It provides a way to define a fixture, which
-can be any bit of setup code or data that a test might require. Each of the
-tests in a file can then list the fixtures they require and have them injected
-into a tests context as appropriate.
+- Tests explicitly list what fixtures they require, ensuring that no
+  un-neccesary setup work is done.
+- Fixtures may be shared across many tests in a project.
+- Fixtures may depend on or override other fixtures, allowing core fixtures to
+  be used & customised as each subsystem or test module requires.
 
 ## Installation
 
@@ -37,9 +31,9 @@ http://hexdocs.pm/ex_unit_fixtures/ExUnitFixtures.html
 
 ## Example
 
-For example, lets say some of your tests required a model named `my_model`, you
-need to define the fixture using `deffixture` and then tag your test to say it
-requires this fixture:
+Say some of your tests required a model named `my_model`. You should define a
+fixture fixture using `deffixture`, then tag your test to say it requires this
+fixture:
 
     defmodule MyTests do
       use ExUnitFixtures
