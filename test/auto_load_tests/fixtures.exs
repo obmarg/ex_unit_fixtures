@@ -1,6 +1,5 @@
 defmodule AutoLoadFixtures do
   use ExUnitFixtures.FixtureModule
-  use ExUnitFixtures.AutoImport
 
   deffixture not_top_level_fixture do
 

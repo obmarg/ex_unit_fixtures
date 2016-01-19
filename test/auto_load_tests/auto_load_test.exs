@@ -1,6 +1,5 @@
 defmodule AutoLoadTest do
   use ExUnitFixtures
-  use ExUnitFixtures.AutoImport
   use ExUnit.Case
 
   deffixture local(fixture_that_uses_top) do
