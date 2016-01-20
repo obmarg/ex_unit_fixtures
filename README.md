@@ -56,7 +56,7 @@ More details can be found in
 
 ### Examples in the wild.
 
-- [vassal](https://github.com/obmarg/vassal) makes use of ExUnitFixtures in
+- [Vassal](https://github.com/obmarg/vassal) makes use of ExUnitFixtures in
   it's integration tests.
 - I have played around with converting the tests for
   [Sqlitex](https://github.com/obmarg/sqlitex/tree/ex_unit_fixtures) to use
