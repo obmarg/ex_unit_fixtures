@@ -20,9 +20,11 @@ more powerful:
 
   1. Add ex_unit_fixtures to your list of dependencies in `mix.exs`:
 
-        def deps do
-          [{:ex_unit_fixtures, "~> 0.3.0", only: [:test]}]
-        end
+```elixir
+def deps do
+  [{:ex_unit_fixtures, "~> 0.3.0", only: [:test]}]
+end
+```
 
 ## Documentation
 
@@ -35,20 +37,22 @@ Say some of your tests required a model named `my_model`. You should define a
 fixture fixture using `deffixture`, then tag your test to say it requires this
 fixture:
 
-    defmodule MyTests do
-      use ExUnitFixtures
-      use ExUnit.Case
+```elixir
+defmodule MyTests do
+  use ExUnitFixtures
+  use ExUnit.Case
 
-      deffixture my_model do
-        # Create a model somehow...
-        %{test: 1}
-      end
+  deffixture my_model do
+    # Create a model somehow...
+    %{test: 1}
+  end
 
-      @tag fixtures: [:my_model]
-      test "that we have some fixtures", context do
-        assert context.my_model.test == 1
-      end
-    end
+  @tag fixtures: [:my_model]
+  test "that we have some fixtures", context do
+    assert context.my_model.test == 1
+  end
+end
+```
 
 More details can be found in
 [the documentation](http://hexdocs.pm/ex_unit_fixtures/ExUnitFixtures.html).
