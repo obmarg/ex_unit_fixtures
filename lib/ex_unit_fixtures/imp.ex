@@ -145,7 +145,7 @@ defmodule ExUnitFixtures.Imp do
 
   # Creates a fixture from it's fixture_info & deps, then inserts it into the
   # created_fixtures map.
-  @spec create_fixture(:atom, %{}) :: term
+  @spec create_fixture(FixtureDef.t, %{}) :: term
   defp create_fixture(fixture_info, created_fixtures) do
 
     args = for dep_name <- fixture_info.dep_names do

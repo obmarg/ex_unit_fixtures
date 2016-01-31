@@ -217,7 +217,7 @@ defmodule ExUnitFixtures do
       dep_name
     end
 
-    scope = Dict.get(opts, :scope, :function)
+    scope = Dict.get(opts, :scope, :test)
     autouse = Dict.get(opts, :autouse, false)
 
     quote do

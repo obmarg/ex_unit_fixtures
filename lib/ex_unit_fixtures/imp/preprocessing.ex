@@ -117,11 +117,12 @@ defmodule ExUnitFixtures.Imp.Preprocessing do
     Enum.reduce imported_fixtures, %{}, &Dict.merge/2
   end
 
-
   @spec validate_dep(FixtureDef.t, FixtureDef.t) :: :ok | no_return
+  defp validate_dep(fixture, resolved_dependency)
   defp validate_dep(%{scope: :module, name: fixture_name},
                     %{scope: :test, name: dep_name}) do
     raise """
+
       Mis-matched scopes:
       #{fixture_name} is scoped to the test module
       #{dep_name} is scoped to the test.
