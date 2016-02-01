@@ -1,10 +1,8 @@
 defmodule ExUnitFixtures.Imp.Preprocessing do
-  @moduledoc """
-  Provides functions that pre-process fixtures at compile time.
-
-  Most of the functions provide some sort of transformation or validation
-  process that we need to do on fixtures at compile time.
-  """
+  @moduledoc false
+  # Provides functions that pre-process fixtures at compile time.
+  # Most of the functions provide some sort of transformation or validation
+  # process that we need to do on fixtures at compile time.
 
   alias ExUnitFixtures.FixtureDef
 

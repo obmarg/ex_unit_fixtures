@@ -1,11 +1,11 @@
 defmodule ExUnitFixtures.Imp.FileLoader do
-  @moduledoc """
-  A GenServer that handles loading fixture files automatically.
+  @moduledoc false
+  # A GenServer that handles loading fixture files automatically.
 
-  It's possible for a user to call `load_fixture_files` manually themselves, but
-  writing this as a GenServer allows us to carry it out as part of the startup
-  of the ExUnitFixtures supervision tree.
-  """
+  # It's possible for a user to call `load_fixture_files` manually themselves, but
+  # writing this as a GenServer allows us to carry it out as part of the startup
+  # of the ExUnitFixtures supervision tree.
+
   use GenServer
 
   @doc """
