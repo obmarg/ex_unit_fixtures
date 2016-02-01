@@ -25,7 +25,7 @@ defmodule ExUnitFixtures.Imp do
   def module_scoped_fixtures(fixture_defs) do
     fixture_defs
     |> module_fixture_names
-    |> create_fixtures(fixture_defs, %{})
+    |> create_fixtures(fixture_defs, %{}, :module)
   end
 
   @doc """
@@ -42,7 +42,6 @@ defmodule ExUnitFixtures.Imp do
   """
   @spec test_scoped_fixtures(%{}, fixture_dict) :: fixtures
   def test_scoped_fixtures(context, fixture_defs) do
-    module_fixtures = module_fixture_names(fixture_defs)
     autouse_fixtures = for {_, f} <- fixture_defs, f.autouse, do: f.name
 
     fixtures = if context[:fixtures] do
@@ -54,13 +53,12 @@ defmodule ExUnitFixtures.Imp do
     if length(fixtures) != 0 do
       existing_fixtures =
         context
-          |> Dict.take(module_fixtures)
+          |> Dict.take(module_fixture_names(fixture_defs))
           |> Dict.put(:context, context)
 
-      test_fixtures =
-        fixtures
-          |> list_difference(module_fixtures)
-          |> create_fixtures(fixture_defs, existing_fixtures)
+      test_fixtures = create_fixtures(
+        fixtures, fixture_defs, existing_fixtures, :test
+      )
 
       Map.merge(context, test_fixtures)
     else
@@ -74,15 +72,19 @@ defmodule ExUnitFixtures.Imp do
   This will create each fixture in `fixtures` using the `FixtureDef` in
   fixture_defs. It takes care to create things in the correct order.
 
+  `existing_fixtures` can be used to pass in fixtures from a higher scope.
+  `scope` can be used to ensure fixtures from a higher scope are not recreated.
+
   It returns a map of fixture name to created fixture.
   """
-  @spec create_fixtures([:atom], fixture_dict, fixtures) :: fixtures
-  def create_fixtures(fixtures, fixture_defs, existing_fixtures) do
+  @spec create_fixtures([:atom], fixture_dict, fixtures, :atom) :: fixtures
+  def create_fixtures(fixtures, fixture_defs, existing_fixtures, scope) do
     fixtures
     |> Enum.map(&resolve_name &1, fixture_defs)
     |> Enum.flat_map(&(fixture_and_dep_info &1, fixture_defs))
     |> Enum.uniq
     |> topsort_fixtures
+    |> Enum.filter(fn fixture -> fixture.scope == scope end)
     |> Enum.reduce(existing_fixtures, &create_fixture/2)
     |> Map.take(fixtures)
   end
@@ -133,7 +135,6 @@ defmodule ExUnitFixtures.Imp do
 
     fixture_info = fixture_defs[fixture_name]
     unless fixture_info do
-      IO.puts inspect fixture_defs
       report_missing_dep(fixture_name, fixture_defs |> Map.values)
     end
 
@@ -147,7 +148,6 @@ defmodule ExUnitFixtures.Imp do
   # created_fixtures map.
   @spec create_fixture(FixtureDef.t, %{}) :: term
   defp create_fixture(fixture_info, created_fixtures) do
-
     args = for dep_name <- fixture_info.dep_names do
       created_fixtures[dep_name]
     end
