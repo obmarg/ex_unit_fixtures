@@ -29,6 +29,7 @@ defmodule ExunitFixturesTest do
   end
 
   deffixture module_fixture(), scope: :module do
+    Agent.update(:module_counter, fn i -> i + 1 end)
     :woo_modules
   end
 
@@ -106,9 +107,15 @@ defmodule ExunitFixturesTest do
     assert context.module_fixture == :woo_modules
   end
 
+
   @tag fixtures: [:test_fixture_with_module_fixture]
   test "test fixtures can depend on module level fixtures", context do
     assert context.test_fixture_with_module_fixture == :woo_modules
+  end
+
+  @tag fixtures: [:test_fixture_with_module_fixture]
+  test "module fixtures are only initialised once", context do
+    assert Agent.get(:module_counter, fn x -> x end) == 1
   end
 
   test "other setup_all functions still run", context do
