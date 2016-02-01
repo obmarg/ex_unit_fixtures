@@ -1,10 +1,8 @@
 defmodule ExUnitFixtures.Imp do
-  @moduledoc """
-  This module provides most of the implementation details of ExUnitFixtures.
-
-  It is seperated out from the main ExUnitFixtures file so the documentation for
-  users is not mixed in with a bunch of irrelevant details.
-  """
+  @moduledoc false
+  # This module provides most of the implementation details of ExUnitFixtures.
+  # It is seperated out from the main ExUnitFixtures file so the documentation for
+  # users is not mixed in with a bunch of irrelevant details.
 
   alias ExUnitFixtures.FixtureDef
 

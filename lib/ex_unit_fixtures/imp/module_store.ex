@@ -1,11 +1,9 @@
 defmodule ExUnitFixtures.Imp.ModuleStore do
-  @moduledoc """
-  This module provides a store for fixture module metadata.
-
-  When a FixtureModule is first defined it should register itself with the
-  module store. This allows other modules to automatically import fixture
-  modules using the metadata in the module store.
-  """
+  @moduledoc false
+  # This module provides a store for fixture module metadata.
+  # When a FixtureModule is first defined it should register itself with the
+  # module store. This allows other modules to automatically import fixture
+  # modules using the metadata in the module store.
 
   @doc false
   def start_link() do
