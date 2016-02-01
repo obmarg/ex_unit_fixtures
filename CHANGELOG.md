@@ -1,3 +1,14 @@
+### v0.3.1 (1/2/16)
+
+- Hid some documentation on the internals of the library from the public API
+  docs.
+- Module scoped dependencies can no longer depend on test scoped
+  dependencies.
+- Fixed an issue where fixtures were marked as "function" scoped by default,
+  rather than the "test" scoped expected in most places and stated in the docs.
+- Fixed an issue where module scoped fixtures would be created on module start,
+  but then also created whenever a test depended on them.
+
 ### v0.3.0 (19/1/16)
 
 Added FixtureModules.  These are modules of fixtures that can be imported into

@@ -22,7 +22,7 @@ more powerful:
 
 ```elixir
 def deps do
-  [{:ex_unit_fixtures, "~> 0.3.0", only: [:test]}]
+  [{:ex_unit_fixtures, "~> 0.3.1", only: [:test]}]
 end
 ```
 
