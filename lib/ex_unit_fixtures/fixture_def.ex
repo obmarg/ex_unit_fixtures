@@ -21,7 +21,7 @@ defmodule ExUnitFixtures.FixtureDef do
     name: nil,
     func: nil,
     dep_names: [],
-    scope: :function,
+    scope: :test,
     autouse: false,
     qualified_name: nil,
     qualified_dep_names: nil,
