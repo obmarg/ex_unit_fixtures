@@ -5,7 +5,7 @@ defmodule FirstFixtures do
     :initial
   end
 
-  deffixture overriable2 do
+  deffixture overridable2 do
     :from_first_fixtures
   end
 end

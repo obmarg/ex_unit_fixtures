@@ -1,90 +1,85 @@
 defmodule ExUnitFixtures.Imp do
   @moduledoc false
   # This module provides most of the implementation details of ExUnitFixtures.
-  # It is seperated out from the main ExUnitFixtures file so the documentation for
-  # users is not mixed in with a bunch of irrelevant details.
+  # It is seperated out from the main ExUnitFixtures file so the documentation
+  # for users is not mixed in with a bunch of irrelevant details.
 
   alias ExUnitFixtures.FixtureDef
+  alias ExUnitFixtures.Imp.FixtureStore
 
   @type fixtures :: %{atom: term}
   @type fixture_dict :: %{atom: FixtureDef.t}
 
   @doc """
-  Creates module scoped fixtures.
-
-  Module scoped fixtures behave slightly differently from test scoped fixtures,
-  in that they are always created before every test in a module, regardless of
-  whether that test actually requested that fixture or not.
-
-  Note that module scoped fixtures can not depend on the test context, as it has
-  not been created at the point they are initialised.
-  """
-  @spec module_scoped_fixtures(fixture_dict) :: fixtures
-  def module_scoped_fixtures(fixture_defs) do
-    fixture_defs
-    |> module_fixture_names
-    |> create_fixtures(fixture_defs, %{}, :module)
-  end
-
-  @doc """
-  Creates test scoped fixtures for a test, by examining it's test context.
-
-  This should be passed:
-
-  - The `context` of the current test.
-  - `fixture_defs` - a map of fixture names to `ExUnitFixtures.FixtureDef`
-    structs.
-
-  It will return `context` with the requested fixtures added in, but also with
-  any module level fixtures that were not requested stripped out.
-  """
-  @spec test_scoped_fixtures(%{}, fixture_dict) :: fixtures
-  def test_scoped_fixtures(context, fixture_defs) do
-    autouse_fixtures = for {_, f} <- fixture_defs, f.autouse, do: f.name
-
-    fixtures = if context[:fixtures] do
-      Enum.uniq(autouse_fixtures ++ context[:fixtures])
-    else
-      autouse_fixtures
-    end
-
-    if length(fixtures) != 0 do
-      existing_fixtures =
-        context
-          |> Dict.take(module_fixture_names(fixture_defs))
-          |> Dict.put(:context, context)
-
-      test_fixtures = create_fixtures(
-        fixtures, fixture_defs, existing_fixtures, :test
-      )
-
-      Map.merge(context, test_fixtures)
-    else
-      context
-    end
-  end
-
-  @doc """
-  Creates fixtures and their dependencies.
+  Creates fixtures & their deps for a test.
 
   This will create each fixture in `fixtures` using the `FixtureDef` in
   fixture_defs. It takes care to create things in the correct order.
 
-  `existing_fixtures` can be used to pass in fixtures from a higher scope.
-  `scope` can be used to ensure fixtures from a higher scope are not recreated.
-
-  It returns a map of fixture name to created fixture.
+  It also loads any existing fixtures from the fixture stores, and stores any
+  newly created fixtures in there also.
   """
-  @spec create_fixtures([:atom], fixture_dict, fixtures, :atom) :: fixtures
-  def create_fixtures(fixtures, fixture_defs, existing_fixtures, scope) do
+  @spec create_fixtures([:atom], fixture_dict, Map.t, Map.t) :: fixtures
+  def create_fixtures(fixture_names, fixture_defs, store_pids, test_context) do
+    autouse_fixtures = for {_, f} <- fixture_defs, f.autouse, do: f.name
+    fixture_names = fixture_names ++ autouse_fixtures
+
+    %{test: test_scoped, module: module_scoped} =
+      fixture_names
+      |> resolve_fixtures(fixture_defs)
+      |> group_by_scope
+
+    # Create/get module scoped fixtures
+    fixtures = Enum.reduce(module_scoped, %{}, fn (fixture_info, fixtures) ->
+      Map.put(
+        fixtures, fixture_info.qualified_name,
+        get_or_create_fixture(fixture_info, store_pids.module)
+      )
+    end)
+
+    # Add test context and create test scoped fixtures
+    fixtures = Map.put(fixtures, :context, test_context)
+    fixtures = Enum.reduce(test_scoped, fixtures, fn (fixture_info, fixtures) ->
+      Map.put(
+        fixtures, fixture_info.qualified_name,
+        create_fixture(fixture_info, fixtures)
+      )
+    end)
+
+    # Build up a map of names -> resolved_name
+    name_map =
+      fixture_names
+      |> Enum.map(fn (name) -> {resolve_name(name, fixture_defs), name} end)
+      |> Enum.into(%{})
+
+    # Use that map to produce our actual output...
     fixtures
+    |> Map.take(Map.keys(name_map))
+    |> Enum.map(fn {k, v} -> {name_map[k], v} end)
+    |> Enum.into(%{})
+  end
+
+  @spec get_or_create_fixture(FixtureDef.t, pid) :: any
+  defp get_or_create_fixture(fixture_info, store_pid) do
+    FixtureStore.get_or_create(
+      store_pid, fixture_info.qualified_name,
+      &(create_fixture fixture_info, &1)
+    )
+  end
+
+  @doc """
+  Resolves a list of fixture names into a list of fixture defs.
+
+  This list will include any dependencies of the required fixtures, and will be
+  returned in the correct order for instantiation.
+  """
+  @spec resolve_fixtures([:atom], fixture_dict) :: [FixtureDef.t]
+  def resolve_fixtures(fixture_names, fixture_defs) do
+    fixture_names
     |> Enum.map(&resolve_name &1, fixture_defs)
     |> Enum.flat_map(&(fixture_and_dep_info &1, fixture_defs))
     |> Enum.uniq
     |> topsort_fixtures
-    |> Enum.filter(fn fixture -> fixture.scope == scope end)
-    |> Enum.reduce(existing_fixtures, &create_fixture/2)
-    |> Map.take(fixtures)
   end
 
   @doc """
@@ -130,7 +125,6 @@ defmodule ExUnitFixtures.Imp do
   @spec fixture_and_dep_info(:atom, fixture_dict) :: [FixtureDef.t]
   defp fixture_and_dep_info(:context, _), do: []
   defp fixture_and_dep_info(fixture_name, fixture_defs) do
-
     fixture_info = fixture_defs[fixture_name]
     unless fixture_info do
       report_missing_dep(fixture_name, fixture_defs |> Map.values)
@@ -142,18 +136,15 @@ defmodule ExUnitFixtures.Imp do
     deps ++ [fixture_info]
   end
 
-  # Creates a fixture from it's fixture_info & deps, then inserts it into the
-  # created_fixtures map.
-  @spec create_fixture(FixtureDef.t, %{}) :: term
+  # Creates a fixture from it's fixture_info & deps.
+  @spec create_fixture(FixtureDef.t, Map.t) :: term
   defp create_fixture(fixture_info, created_fixtures) do
-    args = for dep_name <- fixture_info.dep_names do
+    args = for dep_name <- fixture_info.qualified_dep_names do
       created_fixtures[dep_name]
     end
 
     {mod, func} = fixture_info.func
-    new_fixture = :erlang.apply(mod, func, args)
-
-    Map.put(created_fixtures, fixture_info.name, new_fixture)
+    :erlang.apply(mod, func, args)
   end
 
   # Sorts a list of fixtures by their dependencies.
@@ -190,17 +181,14 @@ defmodule ExUnitFixtures.Imp do
     nil
   end
 
-  # Gets the names of all module fixtures from a fixture_dict.
-  @spec module_fixture_names(fixture_dict) :: [:atom]
-  defp module_fixture_names(fixture_defs) do
-    for {_, f} <- fixture_defs, f.scope == :module, do: f.name
-  end
-
-  # Calculates the difference between two lists of terms.
-  @spec list_difference([term], [term]) :: [term]
-  defp list_difference(x, y) do
-    y = Enum.into(y, MapSet.new)
-
-    x |> Enum.into(MapSet.new) |> Set.difference(y) |> Set.to_list
+  # Groups a list of fixtures by scope.
+  # Unlike Enum.group_by, this will preserve ordering.
+  @spec group_by_scope([FixtureInfo.t]) :: %{}
+  def group_by_scope(fixtures) do
+    [:test, :module]
+    |> Enum.map(fn scope ->
+        {scope, (for fixture <- fixtures, fixture.scope == scope, do: fixture)}
+      end)
+    |> Enum.into(%{})
   end
 end

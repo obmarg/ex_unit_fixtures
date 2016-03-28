@@ -264,12 +264,17 @@ defmodule ExUnitFixtures do
       )
 
       setup_all do
-        {:ok, ExUnitFixtures.Imp.module_scoped_fixtures(@_processed_fixtures)}
+        {:ok, module_store} = ExUnitFixtures.Imp.FixtureStore.start_link
+        {:ok, %{__ex_unit_fixtures: %{module_store: module_store}}}
       end
 
       setup context do
-        {:ok, ExUnitFixtures.Imp.test_scoped_fixtures(context,
-                                                      @_processed_fixtures)}
+        {:ok, ExUnitFixtures.Imp.create_fixtures(
+            context[:fixtures] || [],
+            @_processed_fixtures,
+            %{module: context[:__ex_unit_fixtures][:module_store]},
+            context
+        )}
       end
     end
   end

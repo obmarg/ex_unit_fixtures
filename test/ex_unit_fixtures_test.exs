@@ -114,7 +114,7 @@ defmodule ExunitFixturesTest do
   end
 
   @tag fixtures: [:test_fixture_with_module_fixture]
-  test "module fixtures are only initialised once", context do
+  test "module fixtures are only initialised once" do
     assert Agent.get(:module_counter, fn x -> x end) == 1
   end
 
