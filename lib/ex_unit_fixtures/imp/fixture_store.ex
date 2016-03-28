@@ -1,5 +1,7 @@
 defmodule ExUnitFixtures.Imp.FixtureStore do
-  @moduledoc """
+  @moduledoc false
+
+  @doc """
   Stores fixtures for a session/module.
   """
   def start_link do

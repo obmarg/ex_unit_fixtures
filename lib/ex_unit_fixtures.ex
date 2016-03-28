@@ -76,26 +76,36 @@ defmodule ExUnitFixtures do
 
   Fixtures may optionally be provided with a scope:
 
-  - `:test` scoped fixtures will be created before a test and deleted
-    afterwards. This is the default scope for a fixture.
-  - `:module` scoped fixtures will be created at the start of a test module and
-    passed to every single test in the module.
+  - `:test` scoped fixtures will be created before each test that requires them
+    and not re-used between tests. Their teardown will run after the test has
+    finished. This is the default scope for a fixture.
+  - `:module` scoped fixtures will be created once at the start of a test module
+    and re-used in any test that requires them. Their teardown will run after
+    the entire modules tests have run.
 
   For details on how to specify scopes, see `deffixture/3`.
 
   ## Tearing down Fixtures
 
-  If you need to do some teardown work for a fixture you can use the ExUnit
-  `on_exit` function:
+  If you need to do some teardown work for a fixture you can use the
+  `teardown/2` function.
 
       iex(8)> defmodule TestWithTearDowns do
       ...(8)>   use ExUnitFixtures
       ...(8)>   use ExUnit.Case
       ...(8)>
-      ...(8)>   deffixture database do
+      ...(8)>   deffixture database, scope: :module do
       ...(8)>     # Setup the database
-      ...(8)>     on_exit fn ->
+      ...(8)>     teardown :module, fn ->
       ...(8)>       # Tear down the database
+      ...(8)>       nil
+      ...(8)>     end
+      ...(8)>   end
+      ...(8)>
+      ...(8)>   deffixture model do
+      ...(8)>     # Insert the model
+      ...(8)>     teardown :test, fn ->
+      ...(8)>       # Delete the model
       ...(8)>       nil
       ...(8)>     end
       ...(8)>   end
@@ -149,6 +159,7 @@ defmodule ExUnitFixtures do
     import Supervisor.Spec, warn: false
 
     children = [
+      worker(ExUnitFixtures.Teardown, []),
       worker(ExUnitFixtures.Imp.ModuleStore, [])
     ] ++
     if Application.get_env(:ex_unit_fixtures, :auto_load) do
@@ -236,6 +247,20 @@ defmodule ExUnitFixtures do
     end
   end
 
+  @doc """
+  Registers a teardown function for the current test pid.
+
+  `scope` should be provided, and should match the scope of the current fixture.
+  It determines whether the teardown should be run at the end of the test or end
+  of the module. Providing the incorrect scope will cause the teardown to run at
+  the incorrect time, and may cause module fixtures to act like test fixtures
+  and vice versa.
+  """
+  @spec teardown(:test | :module, fun) :: :ok
+  def teardown(scope \\ :test, fun) do
+    ExUnitFixtures.Teardown.register_teardown(scope, fun)
+  end
+
   defmacro __using__(_opts) do
     quote do
       if is_list(Module.get_attribute(__MODULE__, :ex_unit_tests)) do
@@ -265,14 +290,27 @@ defmodule ExUnitFixtures do
 
       setup_all do
         {:ok, module_store} = ExUnitFixtures.Imp.FixtureStore.start_link
-        {:ok, %{__ex_unit_fixtures: %{module_store: module_store}}}
+        module_ref = make_ref
+
+        ExUnitFixtures.Teardown.register_pid(module_ref, module_store)
+
+        on_exit fn ->
+          ExUnitFixtures.Teardown.run(module_ref)
+        end
+
+        {:ok, %{__ex_unit_fixtures: %{module_store: module_store,
+                                      module_ref: module_ref}}}
       end
 
       setup context do
+        %{__ex_unit_fixtures: fixture_context} = context
+
+        ExUnitFixtures.Teardown.register_pid(fixture_context[:module_ref])
+
         {:ok, ExUnitFixtures.Imp.create_fixtures(
             context[:fixtures] || [],
             @_processed_fixtures,
-            %{module: context[:__ex_unit_fixtures][:module_store]},
+            %{module: fixture_context[:module_store]},
             context
         )}
       end

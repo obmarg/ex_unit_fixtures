@@ -13,11 +13,11 @@ defmodule ExUnitFixtures.Imp do
   @doc """
   Creates fixtures & their deps for a test.
 
-  This will create each fixture in `fixtures` using the `FixtureDef` in
-  fixture_defs. It takes care to create things in the correct order.
+  This will create each fixture in `fixture_names` using the corresponding entry
+  in `fixture_defs`.
 
-  It also loads any existing fixtures from the fixture stores, and stores any
-  newly created fixtures in there also.
+  It will make use of the fixture stores in `store_pids` to fetch & store any
+  module scoped fixtures.
   """
   @spec create_fixtures([:atom], fixture_dict, Map.t, Map.t) :: fixtures
   def create_fixtures(fixture_names, fixture_defs, store_pids, test_context) do

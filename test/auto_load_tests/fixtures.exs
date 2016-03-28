@@ -3,8 +3,8 @@ defmodule AutoLoadFixtures do
 
   deffixture not_top_level_fixture do
 
-    # Make sure that we _can_ call `on_exit` from a FixtureModule.
-    on_exit fn ->
+    # Make sure that we _can_ call `teardown` from a FixtureModule.
+    teardown :test, fn ->
       1
     end
 
