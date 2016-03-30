@@ -84,7 +84,6 @@ defmodule ExUnitFixtures.FixtureModule do
     quote do
       Module.register_attribute __MODULE__, :fixtures, accumulate: true
       import ExUnitFixtures
-      import ExUnit.Callbacks, only: [on_exit: 2, on_exit: 1]
 
       @before_compile ExUnitFixtures.FixtureModule
 

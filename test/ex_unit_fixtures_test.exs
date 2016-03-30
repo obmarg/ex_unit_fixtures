@@ -30,6 +30,11 @@ defmodule ExunitFixturesTest do
 
   deffixture module_fixture(), scope: :module do
     Agent.update(:module_counter, fn i -> i + 1 end)
+
+    teardown :module, fn ->
+      Agent.update(:module_counter, fn _ -> nil end)
+    end
+
     :woo_modules
   end
 
@@ -114,7 +119,12 @@ defmodule ExunitFixturesTest do
   end
 
   @tag fixtures: [:test_fixture_with_module_fixture]
-  test "module fixtures are only initialised once", context do
+  test "module fixtures are only initialised once" do
+    assert Agent.get(:module_counter, fn x -> x end) == 1
+  end
+
+  @tag fixtures: [:module_fixture]
+  test "module fixtures are not freed till module is finished" do
     assert Agent.get(:module_counter, fn x -> x end) == 1
   end
 

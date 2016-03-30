@@ -42,7 +42,8 @@ defmodule ExUnitFixtures.Imp.ModuleStore do
   def find_module(search_module) do
     check_server_running
 
-    Agent.get(__MODULE__, fn state ->
+    __MODULE__
+    |> Agent.get(fn state ->
       for {module, mod_file} <- state, search_module == module, do: mod_file
     end)
     |> List.first
