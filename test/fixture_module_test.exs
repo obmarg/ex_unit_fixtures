@@ -1,6 +1,10 @@
 defmodule FirstFixtures do
   use ExUnitFixtures.FixtureModule
 
+  deffixture session_fixture, scope: :session do
+    Agent.update(:session_counter2, fn i -> i + 1 end)
+  end
+
   deffixture overridable do
     :initial
   end
@@ -73,5 +77,21 @@ defmodule FixtureModuleTest do
   test "that we can hide fixtures without using them", context do
     {_, second} = context.overridable2
     assert second == :from_fixtures
+  end
+
+  @tag fixtures: [:session_fixture]
+  test "that we session fixtures are only created once" do
+    assert Agent.get(:session_counter2, fn i -> i end) == 1
+  end
+end
+
+defmodule FixtureModuleTest2 do
+  use Fixtures
+  use ExUnitFixtures
+  use ExUnit.Case
+
+  @tag fixtures: [:session_fixture]
+  test "that we session fixtures are only created once" do
+    assert Agent.get(:session_counter2, fn i -> i end) == 1
   end
 end

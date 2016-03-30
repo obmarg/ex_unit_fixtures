@@ -42,6 +42,20 @@ defmodule ExunitFixturesTest do
     module_fixture
   end
 
+  deffixture session_fixture(), scope: :session do
+    Agent.update(:session_counter, fn i -> i + 1 end)
+
+    :woo_sessions
+  end
+
+  deffixture module_fixture_with_session_dep(session_fixture) do
+    session_fixture
+  end
+
+  deffixture test_dep_with_session_dep(module_fixture_with_session_dep) do
+    module_fixture_with_session_dep
+  end
+
   deffixture autouse_fixture, autouse: true do
     :automagic
   end
@@ -126,6 +140,23 @@ defmodule ExunitFixturesTest do
   @tag fixtures: [:module_fixture]
   test "module fixtures are not freed till module is finished" do
     assert Agent.get(:module_counter, fn x -> x end) == 1
+  end
+
+  @tag fixtures: [:session_fixture]
+  test "session fixtures can be used", %{session_fixture: fix} do
+    assert fix == :woo_sessions
+  end
+
+  @tag fixtures: [:test_dep_with_session_dep,
+                  :module_fixture_with_session_dep]
+  test "fixtures can depend on session fixtures", context do
+    assert context.test_dep_with_session_dep == :woo_sessions
+    assert context.module_fixture_with_session_dep == :woo_sessions
+  end
+
+  @tag fixtures: [:session_fixture]
+  test "session fixtures are only initialised once" do
+    assert Agent.get(:session_counter, fn x -> x end) == 1
   end
 
   test "other setup_all functions still run", context do
