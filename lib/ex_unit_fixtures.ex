@@ -250,11 +250,13 @@ defmodule ExUnitFixtures do
   @doc """
   Registers a teardown function for the current test pid.
 
-  `scope` should be provided, and should match the scope of the current fixture.
-  It determines whether the teardown should be run at the end of the test or end
-  of the module. Providing the incorrect scope will cause the teardown to run at
-  the incorrect time, and may cause module fixtures to act like test fixtures
-  and vice versa.
+  `scope` should be provided, and should usually match the scope of the current
+  fixture. It determines whether the teardown should be run at the end of the
+  test or end of the module.
+
+  There are some use-cases for providing a non-matching scope. You might want
+  to reset a module fixture inbetween each of the individual tests, which could
+  easily be done with a test scoped teardown.
   """
   @spec teardown(:test | :module, fun) :: :ok
   def teardown(scope \\ :test, fun) do
