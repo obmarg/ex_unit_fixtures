@@ -259,7 +259,7 @@ defmodule ExUnitFixtures do
   easily be done with a test scoped teardown.
   """
   @spec teardown(:test | :module, fun) :: :ok
-  def teardown(scope \\ :test, fun) do
+  def teardown(scope \\ :test, fun) when is_function(fun, 0) do
     ExUnitFixtures.Teardown.register_teardown(scope, fun)
   end
 
