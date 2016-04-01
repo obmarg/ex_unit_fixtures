@@ -28,7 +28,7 @@ defmodule ExUnitFixtures.FixtureDef do
     hidden: false
   ]
 
-  @type scope :: :test | :module
+  @type scope :: :test | :module | :session
 
   @type t :: %__MODULE__{
     name: :atom,

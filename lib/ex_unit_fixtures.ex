@@ -77,11 +77,11 @@ defmodule ExUnitFixtures do
   Fixtures may optionally be provided with a scope:
 
   - `:test` scoped fixtures will be created before each test that requires them
-    and not re-used between tests. Their teardown will run after the test has
-    finished. This is the default scope for a fixture.
-  - `:module` scoped fixtures will be created once at the start of a test module
-    and re-used in any test that requires them. Their teardown will run after
-    the entire modules tests have run.
+    and not re-used between tests. This is the default scope for a fixture.
+  - `:module` scoped fixtures will be created when a test requires them and then
+    re-used in any further tests in that module.
+  - `:session` scoped fixtures will be created when a test requires them and
+    then re-used in any further tests across the entire test run.
 
   For details on how to specify scopes, see `deffixture/3`.
 
@@ -127,6 +127,7 @@ defmodule ExUnitFixtures do
   """
 
   alias ExUnitFixtures.FixtureDef
+  alias ExUnitFixtures.SessionFixtureStore
 
   @doc """
   Starts the ExUnitFixtures application.
@@ -158,12 +159,15 @@ defmodule ExUnitFixtures do
   def start(_type, _args) do
     import Supervisor.Spec, warn: false
 
+    alias ExUnitFixtures.Imp
+
     children = [
       worker(ExUnitFixtures.Teardown, []),
-      worker(ExUnitFixtures.Imp.ModuleStore, [])
+      worker(Imp.ModuleStore, []),
+      worker(Imp.FixtureStore, [[name: ExUnitFixtures.SessionFixtureStore]])
     ] ++
     if Application.get_env(:ex_unit_fixtures, :auto_load) do
-      [worker(ExUnitFixtures.Imp.FileLoader, [])]
+      [worker(Imp.FileLoader, [])]
     else
       []
     end
@@ -231,6 +235,10 @@ defmodule ExUnitFixtures do
     scope = Dict.get(opts, :scope, :test)
     autouse = Dict.get(opts, :autouse, false)
 
+    unless scope in [:test, :module, :session] do
+      raise "Unknown scope: #{scope}"
+    end
+
     quote do
       ExUnitFixtures.Imp.Preprocessing.check_clashes(unquote(name), @fixtures)
 
@@ -257,6 +265,9 @@ defmodule ExUnitFixtures do
   There are some use-cases for providing a non-matching scope. You might want
   to reset a module fixture inbetween each of the individual tests, which could
   easily be done with a test scoped teardown.
+
+  Note: Currently there is no session scope for teardowns. Hopefully this will
+  change in a future release.
   """
   @spec teardown(:test | :module, fun) :: :ok
   def teardown(scope \\ :test, fun) when is_function(fun, 0) do
@@ -312,7 +323,8 @@ defmodule ExUnitFixtures do
         {:ok, ExUnitFixtures.Imp.create_fixtures(
             context[:fixtures] || [],
             @_processed_fixtures,
-            %{module: fixture_context[:module_store]},
+            %{module: fixture_context[:module_store],
+              session: ExUnitFixtures.SessionFixtureStore},
             context
         )}
       end

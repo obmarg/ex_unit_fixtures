@@ -3,9 +3,11 @@ defmodule ExUnitFixtures.Imp.FixtureStore do
 
   @doc """
   Stores fixtures for a session/module.
+
+  Any `opts` will be passed on to `Agent.start_link/2`.
   """
-  def start_link do
-    Agent.start_link(&Map.new/0)
+  def start_link(opts \\ []) do
+    Agent.start_link(&Map.new/0, opts)
   end
 
   @doc """

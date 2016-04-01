@@ -24,47 +24,50 @@ defmodule ExUnitFixtures.Imp do
     autouse_fixtures = for {_, f} <- fixture_defs, f.autouse, do: f.name
     fixture_names = fixture_names ++ autouse_fixtures
 
-    %{test: test_scoped, module: module_scoped} =
-      fixture_names
-      |> resolve_fixtures(fixture_defs)
-      |> group_by_scope
+    grouped = fixture_names |> resolve_fixtures(fixture_defs) |> group_by_scope
 
-    # Create/get module scoped fixtures
-    fixtures = Enum.reduce(module_scoped, %{}, fn (fixture_info, fixtures) ->
+    fixtures =
+      %{}
+      |> get_or_create_fixtures(grouped.session, store_pids.session)
+      |> get_or_create_fixtures(grouped.module, store_pids.module)
+      |> Map.put(:context, test_context)
+
+    grouped.test
+    |> Enum.reduce(fixtures, fn (fixture_def, fixtures) ->
       Map.put(
-        fixtures, fixture_info.qualified_name,
-        get_or_create_fixture(fixture_info, store_pids.module)
+        fixtures, fixture_def.qualified_name,
+        create_fixture(fixture_def, fixtures)
       )
     end)
+    |> requested_fixtures(fixture_names, fixture_defs)
+  end
 
-    # Add test context and create test scoped fixtures
-    fixtures = Map.put(fixtures, :context, test_context)
-    fixtures = Enum.reduce(test_scoped, fixtures, fn (fixture_info, fixtures) ->
-      Map.put(
-        fixtures, fixture_info.qualified_name,
-        create_fixture(fixture_info, fixtures)
+  # Gets or creates some fixtures from the store at `store_pid`
+  # `outer_fixtures` can be used to pass fixtures from a higher scope.
+  @spec get_or_create_fixtures([FixtureDef.t], pid, Map.t) :: Map.t
+  defp get_or_create_fixtures(outer_fixtures, fixture_defs, store_pid) do
+    for fixture_def <- fixture_defs, into: outer_fixtures do
+      fixture = FixtureStore.get_or_create(
+        store_pid, fixture_def.qualified_name,
+        &(create_fixture fixture_def, Map.merge(outer_fixtures, &1))
       )
-    end)
 
-    # Build up a map of names -> resolved_name
-    name_map =
-      fixture_names
-      |> Enum.map(fn (name) -> {resolve_name(name, fixture_defs), name} end)
-      |> Enum.into(%{})
+      {fixture_def.qualified_name, fixture}
+    end
+  end
 
-    # Use that map to produce our actual output...
+  # Takes a map of qualified fixture names -> fixtures, filters it to only the
+  # requested fixtures, and returns a map with the non-qualified names.
+  @spec requested_fixtures([:atom], [FixtureDef.t], Map.t) :: Map.t
+  defp requested_fixtures(fixtures, fixture_names, fixture_defs) do
+    name_map = for name <- fixture_names, into: %{} do
+      {resolve_name(name, fixture_defs), name}
+    end
+
     fixtures
     |> Map.take(Map.keys(name_map))
     |> Enum.map(fn {k, v} -> {name_map[k], v} end)
     |> Enum.into(%{})
-  end
-
-  @spec get_or_create_fixture(FixtureDef.t, pid) :: any
-  defp get_or_create_fixture(fixture_info, store_pid) do
-    FixtureStore.get_or_create(
-      store_pid, fixture_info.qualified_name,
-      &(create_fixture fixture_info, &1)
-    )
   end
 
   @doc """
@@ -125,25 +128,25 @@ defmodule ExUnitFixtures.Imp do
   @spec fixture_and_dep_info(:atom, fixture_dict) :: [FixtureDef.t]
   defp fixture_and_dep_info(:context, _), do: []
   defp fixture_and_dep_info(fixture_name, fixture_defs) do
-    fixture_info = fixture_defs[fixture_name]
-    unless fixture_info do
+    fixture_def = fixture_defs[fixture_name]
+    unless fixture_def do
       report_missing_dep(fixture_name, fixture_defs |> Map.values)
     end
 
-    deps = Enum.flat_map(fixture_info.qualified_dep_names,
+    deps = Enum.flat_map(fixture_def.qualified_dep_names,
                          &(fixture_and_dep_info &1, fixture_defs))
 
-    deps ++ [fixture_info]
+    deps ++ [fixture_def]
   end
 
-  # Creates a fixture from it's fixture_info & deps.
+  # Creates a fixture from it's fixture_def & deps.
   @spec create_fixture(FixtureDef.t, Map.t) :: term
-  defp create_fixture(fixture_info, created_fixtures) do
-    args = for dep_name <- fixture_info.qualified_dep_names do
+  defp create_fixture(fixture_def, created_fixtures) do
+    args = for dep_name <- fixture_def.qualified_dep_names do
       created_fixtures[dep_name]
     end
 
-    {mod, func} = fixture_info.func
+    {mod, func} = fixture_def.func
     :erlang.apply(mod, func, args)
   end
 
@@ -154,8 +157,8 @@ defmodule ExUnitFixtures.Imp do
     try do
       fixtures_to_graph(fixtures, graph)
       for fixture_name <- :digraph_utils.topsort(graph) do
-        {_, fixture_info} = :digraph.vertex(graph, fixture_name)
-        fixture_info
+        {_, fixture_def} = :digraph.vertex(graph, fixture_name)
+        fixture_def
       end
     after
       :digraph.delete(graph)
@@ -184,8 +187,8 @@ defmodule ExUnitFixtures.Imp do
   # Groups a list of fixtures by scope.
   # Unlike Enum.group_by, this will preserve ordering.
   @spec group_by_scope([FixtureInfo.t]) :: %{}
-  def group_by_scope(fixtures) do
-    [:test, :module]
+  defp group_by_scope(fixtures) do
+    [:test, :module, :session]
     |> Enum.map(fn scope ->
         {scope, (for fixture <- fixtures, fixture.scope == scope, do: fixture)}
       end)
