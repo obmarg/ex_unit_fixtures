@@ -6,7 +6,7 @@ defmodule ExUnitFixtures.Imp.ModuleStore do
   # modules using the metadata in the module store.
 
   @doc false
-  def start_link() do
+  def start_link do
     Agent.start_link(fn -> [] end, name: __MODULE__)
   end
 

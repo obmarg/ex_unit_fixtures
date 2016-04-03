@@ -69,14 +69,13 @@ defmodule ExunitFixturesTest do
   end
 
   test "deffixture generates a function that can create a fixture" do
-    assert fixture_create_simple == "simple"
+    assert simple == "simple"
   end
 
   test "deffixture adds the fixture to @fixtures" do
     expected = %ExUnitFixtures.FixtureDef{
       name: :simple,
-      func: {ExunitFixturesTest,
-             :fixture_create_simple},
+      func: {ExunitFixturesTest, :simple},
       qualified_name: :"Elixir.ExunitFixturesTest.simple"
     }
     assert expected in @fixtures
