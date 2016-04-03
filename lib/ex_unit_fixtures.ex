@@ -184,7 +184,7 @@ defmodule ExUnitFixtures do
   end
 
   @doc """
-  Defines a fixture local to a test module.
+  Defines a fixture in the current module.
 
   This is intended to be used much like a def statement:
 
@@ -205,6 +205,10 @@ defmodule ExUnitFixtures do
         %{model: true}
       end
 
+  Note: `deffixture/3` does not support guards or pattern matching in it's
+  definitions. If you want to use those you should define a constructor
+  function yourself and register it with `register_fixture/3`.
+
   #### Fixture Options
 
   Fixtures can accept various options that control how they are defined:
@@ -215,21 +219,54 @@ defmodule ExUnitFixtures do
 
   These options are supported:
 
-  - `scope` controls the scope of fixtures. See Fixture Scoping for details.
+  - `scope` controls the scope of the fixture. See Fixture Scoping for details.
   - Passing `autouse: true` will cause a fixture to be passed to every test in
     the module.
   """
   defmacro deffixture({name, info, params}, opts \\ [], body) do
+    dep_names = for {dep_name, _, _} <- params || [] do
+      dep_name
+    end
+
+    quote do
+      def unquote({name, info, params}), unquote(body)
+
+      ExUnitFixtures.register_fixture(
+        unquote(name), unquote(dep_names), unquote(opts)
+      )
+    end
+  end
+
+  @doc """
+  Registers a function as a fixture in the current module.
+
+  This registers a fixture named `name` in the current module. The fixture will
+  be constructed by a function named `name`, which should be defined separately.
+
+  The fixture will depend on the fixtures listed in `dep_names`, which will be
+  passed to the function in the same order as they are present in `dep_names`.
+
+  `register_fixture/3` should be used instead of `deffixture/3` when using an
+  existing function as a fixture, or when you want to use pattern matching or
+  guards in the definition of the fixture constructor.
+
+      deffixture :a_model, [:db]
+      def a_model(db) do
+        # Construct a model somehow
+      end
+
+  #### Options
+
+  - `scope` controls the scope of the fixture. See Fixture Scoping for details.
+  - `autouse: true` will cause a fixture to be passed to every test in the
+    module.
+  """
+  defmacro register_fixture(name, dep_names, opts \\ []) do
     if name == :context do
       raise """
       The name context is reserved for the ExUnit context.
       It may not be used for fixtures.
       """
-    end
-
-    create_name = :"fixture_create_#{name}"
-    dep_names = for {dep_name, _, _} <- params || [] do
-      dep_name
     end
 
     scope = Dict.get(opts, :scope, :test)
@@ -242,11 +279,9 @@ defmodule ExUnitFixtures do
     quote do
       ExUnitFixtures.Imp.Preprocessing.check_clashes(unquote(name), @fixtures)
 
-      def unquote({create_name, info, params}), unquote(body)
-
       @fixtures %FixtureDef{
         name: unquote(name),
-        func: {__MODULE__, unquote(create_name)},
+        func: {__MODULE__, unquote(name)},
         dep_names: unquote(dep_names),
         scope: unquote(scope),
         autouse: unquote(autouse),
