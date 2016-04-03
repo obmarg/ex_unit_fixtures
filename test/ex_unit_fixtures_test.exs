@@ -60,6 +60,16 @@ defmodule ExunitFixturesTest do
     :automagic
   end
 
+  register_fixture :manual_no_dep_fixture
+  def manual_no_dep_fixture do
+    "manual_no_dep"
+  end
+
+  def manual_dep_fixture(_manual_no_dep_fixture) do
+    "manual_dep"
+  end
+  register_fixture :manual_dep_fixture, [:manual_no_dep_fixture]
+
   setup_all do
     {:ok, %{setup_all_ran: true}}
   end
@@ -174,5 +184,11 @@ defmodule ExunitFixturesTest do
   @tag fixtures: [:autouse_fixture]
   test "asking for an autouse fixture is ok", context do
     assert context.autouse_fixture == :automagic
+  end
+
+  @tag fixtures: [:manual_dep_fixture, :manual_no_dep_fixture]
+  test "manual fixtures", context do
+    assert context.manual_dep_fixture == "manual_dep"
+    assert context.manual_no_dep_fixture == "manual_no_dep"
   end
 end

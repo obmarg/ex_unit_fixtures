@@ -261,7 +261,7 @@ defmodule ExUnitFixtures do
   - `autouse: true` will cause a fixture to be passed to every test in the
     module.
   """
-  defmacro register_fixture(name, dep_names, opts \\ []) do
+  defmacro register_fixture(name, dep_names \\ [], opts \\ []) do
     if name == :context do
       raise """
       The name context is reserved for the ExUnit context.
