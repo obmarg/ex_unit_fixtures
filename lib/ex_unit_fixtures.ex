@@ -355,8 +355,13 @@ defmodule ExUnitFixtures do
 
         ExUnitFixtures.Teardown.register_pid(fixture_context[:module_ref])
 
+        fixture_names = context[:fixtures] |> List.wrap |> Enum.map(fn
+          x when is_atom(x) -> x
+          x when is_binary(x) -> String.to_existing_atom(x)
+        end)
+
         {:ok, ExUnitFixtures.Imp.create_fixtures(
-            context[:fixtures] || [],
+            fixture_names,
             @_processed_fixtures,
             %{module: fixture_context[:module_store],
               session: ExUnitFixtures.SessionFixtureStore},
