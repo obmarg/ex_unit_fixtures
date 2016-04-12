@@ -250,7 +250,7 @@ defmodule ExUnitFixtures do
   existing function as a fixture, or when you want to use pattern matching or
   guards in the definition of the fixture constructor.
 
-      deffixture :a_model, [:db]
+      register_fixture :a_model, [:db]
       def a_model(db) do
         # Construct a model somehow
       end
