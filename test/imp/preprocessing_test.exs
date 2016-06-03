@@ -26,7 +26,7 @@ defmodule PreprocessingTest do
 
     assert output[:"Test.fixture_one"] != nil
     assert output[:"Test.fixture_two"] != nil
-    assert Dict.size(output) == 2
+    assert map_size(output) == 2
 
     assert output[:"Test.fixture_one"].dep_names == []
     assert output[:"Test.fixture_one"].qualified_dep_names == []
@@ -52,7 +52,7 @@ defmodule PreprocessingTest do
 
     assert output[:"Fixtures.fixture_one"] != nil
     assert output[:"Test.fixture_two"] != nil
-    assert Dict.size(output) == 2
+    assert map_size(output) == 2
 
     refute output[:"Fixtures.fixture_one"].hidden
 
@@ -77,7 +77,7 @@ defmodule PreprocessingTest do
 
     assert output[:"Fixtures.fixture_one"] != nil
     assert output[:"Test.fixture_one"] != nil
-    assert Dict.size(output) == 2
+    assert map_size(output) == 2
 
     assert output[:"Fixtures.fixture_one"].hidden
 

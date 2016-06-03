@@ -102,9 +102,8 @@ defmodule ExUnitFixtures.Imp do
         |> List.first
 
     err = "Could not find a fixture named #{fixture_name}."
-    if suggestion do
-      err = err <> " Did you mean #{suggestion}?"
-    end
+    err = err <> if suggestion, do: " Did you mean #{suggestion}?", else: ""
+
     raise err
   end
 
