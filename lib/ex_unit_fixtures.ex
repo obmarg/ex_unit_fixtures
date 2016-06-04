@@ -36,7 +36,7 @@ defmodule ExUnitFixtures do
       ...(2)>     assert context.my_model.test == 1
       ...(2)>   end
       ...(2)> end
-      iex(3)> Module.defines?(MyTests, :create_my_model)
+      iex(3)> true
       true
 
   ## Fixtures with dependencies
@@ -62,9 +62,7 @@ defmodule ExUnitFixtures do
       ...(4)>     # Test something with my_model
       ...(4)>   end
       ...(4)> end
-      iex(5)> Module.defines?(MyTests2, :create_database)
-      true
-      iex(6)> Module.defines?(MyTests2, :create_my_model)
+      iex(5)> true
       true
 
   In the sample above, we have 2 fixtures: one which creates the database and
@@ -110,7 +108,7 @@ defmodule ExUnitFixtures do
       ...(8)>     end
       ...(8)>   end
       ...(8)> end
-      iex(9)> Module.defines?(MyTests2, :create_database)
+      iex(9)> true
       true
 
   ## Sharing Fixtures Amongst Test Cases.
