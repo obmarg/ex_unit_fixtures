@@ -117,9 +117,13 @@ defmodule ExUnitFixtures.AutoImport do
   # file name.
   @spec matching_files(String.t, Regex.t) :: [String.t]
   defp matching_files(directory, fixture_regex) do
-    directory
-    |> File.ls!
-    |> Enum.filter(&Regex.match? fixture_regex, &1)
-    |> Enum.map(&Path.join directory, &1)
+    if File.dir?(directory) do
+      directory
+      |> File.ls!
+      |> Enum.filter(&Regex.match? fixture_regex, &1)
+      |> Enum.map(&Path.join directory, &1)
+    else
+      []
+    end
   end
 end
