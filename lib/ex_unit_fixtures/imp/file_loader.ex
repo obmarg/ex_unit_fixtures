@@ -31,6 +31,6 @@ defmodule ExUnitFixtures.Imp.FileLoader do
       |> Path.wildcard
       |> Enum.sort_by(fn (v) -> v |> Path.split |> Enum.count end)
 
-    modules = Enum.map(paths, &Code.load_file/1)
+    modules = Enum.map(paths, &Code.require_file/1)
   end
 end
