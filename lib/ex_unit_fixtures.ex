@@ -275,9 +275,9 @@ defmodule ExUnitFixtures do
     end
 
     quote do
-      ExUnitFixtures.Imp.Preprocessing.check_clashes(unquote(name), @fixtures)
+      ExUnitFixtures.Imp.Preprocessing.check_clashes(unquote(name), @__fixtures)
 
-      @fixtures %FixtureDef{
+      @__fixtures %FixtureDef{
         name: unquote(name),
         func: {__MODULE__, unquote(name)},
         dep_names: unquote(dep_names),
@@ -317,7 +317,7 @@ defmodule ExUnitFixtures do
                                 :fixture_modules,
                                 accumulate: true)
 
-      Module.register_attribute __MODULE__, :fixtures, accumulate: true
+      Module.register_attribute __MODULE__, :__fixtures, accumulate: true
       @before_compile ExUnitFixtures
 
       import ExUnitFixtures
@@ -331,7 +331,7 @@ defmodule ExUnitFixtures do
   defmacro __before_compile__(_) do
     quote do
       @_processed_fixtures ExUnitFixtures.Imp.Preprocessing.preprocess_fixtures(
-        @fixtures, @fixture_modules
+        @__fixtures, @fixture_modules
       )
 
       setup_all do
@@ -353,9 +353,10 @@ defmodule ExUnitFixtures do
 
         ExUnitFixtures.Teardown.register_pid(fixture_context[:module_ref])
 
-        fixture_names = context[:fixtures] |> List.wrap |> Enum.map(fn
-          x when is_atom(x) -> x
-          x when is_binary(x) -> String.to_existing_atom(x)
+        fixture_names = context.registered.fixtures |> List.wrap |> Enum.flat_map(fn
+          x when is_atom(x) -> List.wrap(x)
+          x when is_binary(x) -> List.wrap(String.to_existing_atom(x))
+          x when is_tuple(x) -> Tuple.to_list(x)
         end)
 
         {:ok, ExUnitFixtures.Imp.create_fixtures(
