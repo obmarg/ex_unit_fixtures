@@ -16,8 +16,9 @@ defmodule ExUnitFixtures do
   Next you should:
 
   1. Add `use ExUnitFixtures` to your test cases (before `use ExUnit.Case`)
-  2. Define some fixtures using `deffixture/3`
-  3. Tag some tests with `@tag fixtures: [:your_fixtures_here]`
+  2. Add `ExUnit.Case.register_attribute __MODULE__, :fixtures` (after `use ExUnit.Case`)
+  3. Define some fixtures using `deffixture/3`
+  4. Tag some tests with `@fixtures: [:your_fixtures_here]`. Fixtures may be specified as an atom, a list, or a tuple.
 
   The tagged tests will automatically have all the requested fixtures injected
   into their `context`. For example:
@@ -25,13 +26,14 @@ defmodule ExUnitFixtures do
       iex(2)> defmodule MyTests do
       ...(2)>   use ExUnitFixtures
       ...(2)>   use ExUnit.Case
+      ...(2)>   ExUnit.Case.register_attribute __MODULE__, :fixtures
       ...(2)>
       ...(2)>   deffixture my_model do
       ...(2)>     # Create a model somehow...
       ...(2)>     %{test: 1}
       ...(2)>   end
       ...(2)>
-      ...(2)>   @tag fixtures: [:my_model]
+      ...(2)>   @fixtures: [:my_model]
       ...(2)>   test "that we have some fixtures", context do
       ...(2)>     assert context.my_model.test == 1
       ...(2)>   end
@@ -57,7 +59,7 @@ defmodule ExUnitFixtures do
       ...(4)>     # use the database to insert a model
       ...(4)>   end
       ...(4)>
-      ...(4)>   @tag fixtures: [:my_model]
+      ...(4)>   @fixtures: :my_model
       ...(4)>   test "something", %{my_model: my_model} do
       ...(4)>     # Test something with my_model
       ...(4)>   end
@@ -325,6 +327,8 @@ defmodule ExUnitFixtures do
       if Application.get_env(:ex_unit_fixtures, :auto_import) do
         use ExUnitFixtures.AutoImport
       end
+
+      ExUnit.Case.register_attribute __MODULE__, :fixtures
     end
   end
 

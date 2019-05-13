@@ -28,7 +28,7 @@ defmodule ExUnitFixtures.FixtureModule do
         use MyFixtures
         use ExUnit.Case
 
-        @tag fixtures: [:user]
+        @fixtures: [:user]
         test "that we have a user", %{user: user} do
           assert user == :user
         end
@@ -55,7 +55,7 @@ defmodule ExUnitFixtures.FixtureModule do
           %{user | active: false}
         end
 
-        @tag fixtures: [:user]
+        @fixtures: :user
         test "that user is inactive", %{user: user} do
           assert user.active == false
         end
