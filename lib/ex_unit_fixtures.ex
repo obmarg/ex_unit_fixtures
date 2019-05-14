@@ -33,7 +33,7 @@ defmodule ExUnitFixtures do
       ...(2)>     %{test: 1}
       ...(2)>   end
       ...(2)>
-      ...(2)>   @fixtures: [:my_model]
+      ...(2)>   @fixtures [:my_model]
       ...(2)>   test "that we have some fixtures", context do
       ...(2)>     assert context.my_model.test == 1
       ...(2)>   end
@@ -50,6 +50,7 @@ defmodule ExUnitFixtures do
       iex(4)> defmodule MyTests2 do
       ...(4)>   use ExUnitFixtures
       ...(4)>   use ExUnit.Case
+      ...(4)>   ExUnit.Case.register_attribute __MODULE__, :fixtures
       ...(4)>
       ...(4)>   deffixture database do
       ...(4)>     # set up the database somehow...
@@ -59,7 +60,7 @@ defmodule ExUnitFixtures do
       ...(4)>     # use the database to insert a model
       ...(4)>   end
       ...(4)>
-      ...(4)>   @fixtures: :my_model
+      ...(4)>   @fixtures :my_model
       ...(4)>   test "something", %{my_model: my_model} do
       ...(4)>     # Test something with my_model
       ...(4)>   end

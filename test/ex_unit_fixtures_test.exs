@@ -62,6 +62,15 @@ defmodule ExunitFixturesTest do
     :automagic
   end
 
+
+  deffixture deps do
+    :automagic
+  end
+
+  deffixture autouse_fixture_deps(deps), autouse: true do
+    deps
+  end
+
   register_fixture :manual_no_dep_fixture
   def manual_no_dep_fixture do
     "manual_no_dep"
@@ -78,6 +87,11 @@ defmodule ExunitFixturesTest do
 
   setup context do
     {:ok, %{setup_ran: true, setup_all_ran: context.setup_all_ran}}
+  end
+
+  @fixture {:autouse_fixture_deps}
+  test "ensure syntax for fixture with deps and autouse works", context do
+    assert context.autouse_fixture_deps == :automagic
   end
 
   test "deffixture generates a function that can create a fixture" do
