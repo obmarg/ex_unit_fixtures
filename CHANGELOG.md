@@ -1,3 +1,8 @@
+### v0.4.0 (2019-05-23)
+
+- Changed the API for defining fixtures to use @fixture instead of @tag
+- Added support for tuples of fixtures
+
 ### v0.3.1 (1/2/16)
 
 - Hid some documentation on the internals of the library from the public API
