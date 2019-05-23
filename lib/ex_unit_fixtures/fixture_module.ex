@@ -28,7 +28,7 @@ defmodule ExUnitFixtures.FixtureModule do
         use MyFixtures
         use ExUnit.Case
 
-        @tag fixtures: [:user]
+        @fixtures: [:user]
         test "that we have a user", %{user: user} do
           assert user == :user
         end
@@ -55,7 +55,7 @@ defmodule ExUnitFixtures.FixtureModule do
           %{user | active: false}
         end
 
-        @tag fixtures: [:user]
+        @fixtures: :user
         test "that user is inactive", %{user: user} do
           assert user.active == false
         end
@@ -82,7 +82,7 @@ defmodule ExUnitFixtures.FixtureModule do
 
   defmacro __using__(_opts) do
     quote do
-      Module.register_attribute __MODULE__, :fixtures, accumulate: true
+      Module.register_attribute __MODULE__, :__fixtures, accumulate: true
       import ExUnitFixtures
 
       @before_compile ExUnitFixtures.FixtureModule
@@ -106,7 +106,7 @@ defmodule ExUnitFixtures.FixtureModule do
   defmacro __before_compile__(_) do
     quote do
       @fixtures_ ExUnitFixtures.Imp.Preprocessing.preprocess_fixtures(
-        @fixtures, Enum.uniq(@fixture_modules)
+        @__fixtures, Enum.uniq(@fixture_modules)
       )
 
       def fixtures do

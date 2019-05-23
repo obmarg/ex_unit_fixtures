@@ -38,7 +38,8 @@ end
 defmodule FixtureModuleTest do
   use Fixtures
   use ExUnitFixtures
-  use ExUnit.Case
+  use ExUnit.Case, async: true
+  ExUnit.Case.register_attribute __MODULE__, :fixtures
 
   deffixture overridable2(overridable2) do
     {:in_test, overridable2}
@@ -52,34 +53,34 @@ defmodule FixtureModuleTest do
     assert length(@fixture_modules) > 0
   end
 
-  @tag fixtures: [:simple]
+  @fixtures :simple
   test "that we can import fixtures from the fixture module", context do
     assert context.simple == :simple
   end
 
-  @tag fixtures: [:overridable]
+  @fixtures :overridable
   test "we can override fixtures from other modules", context do
     assert context.overridable == {:second, :initial}
   end
 
-  @tag fixtures: [:fixture_that_uses_overridable]
+  @fixtures :fixture_that_uses_overridable
   test "depending on an overridden fixture gets the current version", context do
     assert context.fixture_that_uses_overridable == {:second, :initial}
   end
 
-  @tag fixtures: [:overridable2]
+  @fixtures :overridable2
   test "that we can override locally", context do
     {first, _} = context.overridable2
     assert first == :in_test
   end
 
-  @tag fixtures: [:overridable2]
+  @fixtures :overridable2
   test "that we can hide fixtures without using them", context do
     {_, second} = context.overridable2
     assert second == :from_fixtures
   end
 
-  @tag fixtures: [:session_fixture]
+  @fixtures :session_fixture
   test "that we session fixtures are only created once" do
     assert Agent.get(:session_counter2, fn i -> i end) == 1
   end
@@ -88,9 +89,10 @@ end
 defmodule FixtureModuleTest2 do
   use Fixtures
   use ExUnitFixtures
-  use ExUnit.Case
+  use ExUnit.Case, async: true
+  ExUnit.Case.register_attribute __MODULE__, :fixtures
 
-  @tag fixtures: [:session_fixture]
+  @fixtures :session_fixture
   test "that we session fixtures are only created once" do
     assert Agent.get(:session_counter2, fn i -> i end) == 1
   end

@@ -45,7 +45,7 @@ defmodule ExUnitFixtures.AutoImport do
                   defmodule UserTests do
                     use ExUnitFixtures
 
-                    @tag fixtures: [:user]
+                    @fixtures: :user
                     test "user has name", context do
                       assert context.user.name == "Graeme"
                     end

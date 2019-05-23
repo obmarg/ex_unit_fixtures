@@ -41,13 +41,14 @@ fixture:
 defmodule MyTests do
   use ExUnitFixtures
   use ExUnit.Case
+  ExUnit.Case.register_attribute __MODULE__, :fixtures
 
   deffixture my_model do
     # Create a model somehow...
     %{test: 1}
   end
 
-  @tag fixtures: [:my_model]
+  @fixtures: :my_model
   test "that we have some fixtures", context do
     assert context.my_model.test == 1
   end

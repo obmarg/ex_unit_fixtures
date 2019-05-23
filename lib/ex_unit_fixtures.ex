@@ -16,8 +16,9 @@ defmodule ExUnitFixtures do
   Next you should:
 
   1. Add `use ExUnitFixtures` to your test cases (before `use ExUnit.Case`)
-  2. Define some fixtures using `deffixture/3`
-  3. Tag some tests with `@tag fixtures: [:your_fixtures_here]`
+  2. Add `ExUnit.Case.register_attribute __MODULE__, :fixtures` (after `use ExUnit.Case`)
+  3. Define some fixtures using `deffixture/3`
+  4. Tag some tests with `@fixtures: [:your_fixtures_here]`. Fixtures may be specified as an atom, a list, or a tuple.
 
   The tagged tests will automatically have all the requested fixtures injected
   into their `context`. For example:
@@ -25,13 +26,14 @@ defmodule ExUnitFixtures do
       iex(2)> defmodule MyTests do
       ...(2)>   use ExUnitFixtures
       ...(2)>   use ExUnit.Case
+      ...(2)>   ExUnit.Case.register_attribute __MODULE__, :fixtures
       ...(2)>
       ...(2)>   deffixture my_model do
       ...(2)>     # Create a model somehow...
       ...(2)>     %{test: 1}
       ...(2)>   end
       ...(2)>
-      ...(2)>   @tag fixtures: [:my_model]
+      ...(2)>   @fixtures [:my_model]
       ...(2)>   test "that we have some fixtures", context do
       ...(2)>     assert context.my_model.test == 1
       ...(2)>   end
@@ -48,6 +50,7 @@ defmodule ExUnitFixtures do
       iex(4)> defmodule MyTests2 do
       ...(4)>   use ExUnitFixtures
       ...(4)>   use ExUnit.Case
+      ...(4)>   ExUnit.Case.register_attribute __MODULE__, :fixtures
       ...(4)>
       ...(4)>   deffixture database do
       ...(4)>     # set up the database somehow...
@@ -57,7 +60,7 @@ defmodule ExUnitFixtures do
       ...(4)>     # use the database to insert a model
       ...(4)>   end
       ...(4)>
-      ...(4)>   @tag fixtures: [:my_model]
+      ...(4)>   @fixtures :my_model
       ...(4)>   test "something", %{my_model: my_model} do
       ...(4)>     # Test something with my_model
       ...(4)>   end
@@ -275,9 +278,9 @@ defmodule ExUnitFixtures do
     end
 
     quote do
-      ExUnitFixtures.Imp.Preprocessing.check_clashes(unquote(name), @fixtures)
+      ExUnitFixtures.Imp.Preprocessing.check_clashes(unquote(name), @__fixtures)
 
-      @fixtures %FixtureDef{
+      @__fixtures %FixtureDef{
         name: unquote(name),
         func: {__MODULE__, unquote(name)},
         dep_names: unquote(dep_names),
@@ -317,7 +320,7 @@ defmodule ExUnitFixtures do
                                 :fixture_modules,
                                 accumulate: true)
 
-      Module.register_attribute __MODULE__, :fixtures, accumulate: true
+      Module.register_attribute __MODULE__, :__fixtures, accumulate: true
       @before_compile ExUnitFixtures
 
       import ExUnitFixtures
@@ -325,13 +328,15 @@ defmodule ExUnitFixtures do
       if Application.get_env(:ex_unit_fixtures, :auto_import) do
         use ExUnitFixtures.AutoImport
       end
+
+      ExUnit.Case.register_attribute __MODULE__, :fixtures
     end
   end
 
   defmacro __before_compile__(_) do
     quote do
       @_processed_fixtures ExUnitFixtures.Imp.Preprocessing.preprocess_fixtures(
-        @fixtures, @fixture_modules
+        @__fixtures, @fixture_modules
       )
 
       setup_all do
@@ -353,9 +358,10 @@ defmodule ExUnitFixtures do
 
         ExUnitFixtures.Teardown.register_pid(fixture_context[:module_ref])
 
-        fixture_names = context[:fixtures] |> List.wrap |> Enum.map(fn
-          x when is_atom(x) -> x
-          x when is_binary(x) -> String.to_existing_atom(x)
+        fixture_names = context.registered.fixtures |> List.wrap |> Enum.flat_map(fn
+          x when is_atom(x) -> List.wrap(x)
+          x when is_binary(x) -> List.wrap(String.to_existing_atom(x))
+          x when is_tuple(x) -> Tuple.to_list(x)
         end)
 
         {:ok, ExUnitFixtures.Imp.create_fixtures(
