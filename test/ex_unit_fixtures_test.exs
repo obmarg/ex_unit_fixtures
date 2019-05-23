@@ -206,4 +206,10 @@ defmodule ExunitFixturesTest do
     assert context.manual_dep_fixture == "manual_dep"
     assert context.manual_no_dep_fixture == "manual_no_dep"
   end
+
+  @fixtures [:manual_dep_fixture, :manual_no_dep_fixture]
+  test "lists of fixtures", context do
+    assert context.manual_dep_fixture == "manual_dep"
+    assert context.manual_no_dep_fixture == "manual_no_dep"
+  end
 end
