@@ -4,7 +4,7 @@ defmodule ExUnitFixtures.Mixfile do
   def project do
     [app: :ex_unit_fixtures,
      version: "0.4.0",
-     elixir: "~> 1.1",
+     elixir: "~> 1.3",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      deps: deps(),
